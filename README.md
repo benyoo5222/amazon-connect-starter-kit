@@ -4,21 +4,27 @@ This is a starter kit for building a contact center using Amazon Connect.
 
 ## Prerequisites
 
+- Docker
 - AWS Account
 - Enabled AWS IAM Identity Center
 - AWS IAM User in Identity Center with AdministratorAccess + Access to Account
 - AWS CLI installed (Version 2.27.2 or higher)
+- AWS SAM CLI installed (Version 1.137.1)
 - Node.js installed (Version 22.3.0 or higher)
+- Python installed (Version 3.12 or higher)
 - pnpm installed (Version 9.11.0 or higher)
-- LocalStack
+- LocalStack account - (Hobby plan for personal or Starter plan for business)
+- LocalStack CLI installed (Version 4.3.0 or higher)
+- LocalStack AWS CLI installed - venv
+- LocalStack SAM CLI installed - venv
 
-## AWS CLI Authentication (SSO)
+### AWS CLI Authentication (SSO)
 
 By using SSO, you can avoid having to manage long-term credentials for your AWS account.
 
 For more info, check out the [AWS CLI SSO docs](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html)
 
-### Configuring your SSO Profile
+#### Configuring your SSO Profile
 
 1. Run `aws configure sso`
 2. Enter a session name (e.g. `AmazonConnectStarterKit-<Environment>`)
@@ -33,7 +39,7 @@ For more info, check out the [AWS CLI SSO docs](https://docs.aws.amazon.com/cli/
 
 You can check your configuration by running `aws configure list` or looking at the `~/.aws/config` file
 
-### Logging in to an IAM Identity Center Session (AWS CLI SSO)
+#### Logging in to an IAM Identity Center Session (AWS CLI SSO)
 
 1. Run `aws sso login --profile <profile-name>` (e.g. `aws sso login --profile <YourName>-<Environment>`)
 
@@ -41,11 +47,20 @@ This will recache your profile's credentials and place them in `~/.aws/sso/cache
 
 ## Setup
 
-Run the following command:
+For runnning LocalStack, run the following commands:
 
 ```sh
-npx create-turbo@latest
+localstack auth set-token <YOUR_AUTH_TOKEN>
+localstack start -d
 ```
+
+If you run into issues pulling down the localstack pro image, try running:
+
+```sh
+sudo /Applications/Docker.app/Contents/MacOS/install vmnetd
+```
+
+Try the `localstack start -d` command again.
 
 ## What's inside?
 
