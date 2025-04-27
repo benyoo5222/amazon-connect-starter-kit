@@ -1,8 +1,45 @@
-# Turborepo starter
+# Amazon Connect Starter Kit
 
-This Turborepo starter is maintained by the Turborepo core team.
+This is a starter kit for building a contact center using Amazon Connect.
 
-## Using this example
+## Prerequisites
+
+- AWS Account
+- Enabled AWS IAM Identity Center
+- AWS IAM User in Identity Center with AdministratorAccess + Access to Account
+- AWS CLI installed (Version 2.27.2 or higher)
+- Node.js installed (Version 22.3.0 or higher)
+- pnpm installed (Version 9.11.0 or higher)
+- LocalStack
+
+## AWS CLI Authentication (SSO)
+
+By using SSO, you can avoid having to manage long-term credentials for your AWS account.
+
+For more info, check out the [AWS CLI SSO docs](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html)
+
+### Configuring your SSO Profile
+
+1. Run `aws configure sso`
+2. Enter a session name (e.g. `AmazonConnectStarterKit-<Environment>`)
+3. Enter the SSO Start URL (e.g. `https://d-906766655d.awsapps.com/start/#`)
+4. Enter the SSO Region (e.g. `us-east-1`)
+5. Enter the SSO Registration Scope (Press Enter for `sso:account:access`)
+6. Select the AWS account attached to the user
+7. Select the appropriate role from the list (e.g. `AdministratorAccess`)
+8. Enter the Default Client Region (e.g. `us-east-1`)
+9. Enter the Default Output Format (Press enter for `json`)
+10. Enter a profile name (e.g. `<YourName>-<Environment>`)
+
+You can check your configuration by running `aws configure list` or looking at the `~/.aws/config` file
+
+### Logging in to an IAM Identity Center Session (AWS CLI SSO)
+
+1. Run `aws sso login --profile <profile-name>` (e.g. `aws sso login --profile <YourName>-<Environment>`)
+
+This will recache your profile's credentials and place them in `~/.aws/sso/cache`
+
+## Setup
 
 Run the following command:
 
