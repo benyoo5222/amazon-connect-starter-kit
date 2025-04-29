@@ -39,3 +39,12 @@ yarn-error.log*
 
 # LocalStack
 .venv/
+
+# env.sh
+env.sh
+
+# .aws-sam
+.aws-sam/
+
+# samconfig.toml
+samconfig.toml

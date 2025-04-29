@@ -132,4 +132,7 @@ Resources:
         EarlyMedia: !Ref IsEarlyMediaEnabled
         InboundCalls: !Ref IsInboundCallsEnabled
         OutboundCalls: !Ref IsOutboundCallsEnabled
-        UseCustomTTSVoices: !Ref IsUseCustomTTSVoicesEnabled
+        #########################################################
+        # As of 05-25, you must be on the AWS's allowed list to use this.
+        # UseCustomTTSVoices: !Ref IsUseCustomTTSVoicesEnabled #
+        #########################################################

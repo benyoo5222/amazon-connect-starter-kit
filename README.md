@@ -64,6 +64,12 @@ Try the `localstack start -d` command again.
 
 ## Creating an Amazon Connect Instance (SAM)
 
+!IMPORTANT: Your user should have the `AmazonConnect_FullAccess` to create an Amazon Connect Instance.
+
+_Note: As of 05-25, this CloudFormation Amazon Connect Instance Resource is under preview and can change._
+
+_Note: The `UseCustomTTSVoices` attribute is only for customers who are on the allowed list. Please contact AWS to get access._
+
 Following parameters are used to create an Amazon Connect Instance:
 
 | Parameter                      | Description                                                                                                     | Type                          | Required                            |
@@ -77,6 +83,9 @@ Following parameters are used to create an Amazon Connect Instance:
 | IsInboundCallsEnabled          | Enables inbound calling capabilities                                                                            | Boolean                       | Optional (Default: true)            |
 | IsOutboundCallsEnabled         | Enables outbound calling capabilities                                                                           | Boolean                       | Optional (Default: true)            |
 | IsUseCustomTTSVoicesEnabled    | Enables custom text-to-speech voices                                                                            | Boolean                       | Optional (Default: true)            |
+
+Please note that this only supports `CONNECT_MANAGED` or `SAML` for Identity Management Type.
+It does not support `Existing Directory`.
 
 ## What's inside?
 
