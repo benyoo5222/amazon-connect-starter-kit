@@ -97,22 +97,28 @@ Mappings:
       isAvailable: true
 
 Conditions:
+  ##########################################
+  # Connect Instance Availabilty Condition #
+  ##########################################
   IsConnectAvailableInRegion:
     !Equals [
       !FindInMap [AmazonConnectRegions, !Ref "AWS::Region", isAvailable],
       true,
     ]
 
+  ###########################################
+  # Connect Features Availabilty Conditions #
+  ###########################################
+
 Resources:
   ##############################################################
-  # AC Instance (As of 05-25 this is not GA)                   #
+  # AC Instance (As of 05-25 this is not GA & can change)      #
   # Additional Information:                                    #
   #  - Amazon Connect enforces a limit of 100 combined         #
   #    instance creation and deletions every 30 days           #
   #  - Cannot update Identity Managent Type (Connect VS SAML)  #
   #    after the instance is created                           #
   ##############################################################
-
   ConnectInstance:
     Type: AWS::Connect::Instance
     Condition: IsConnectAvailableInRegion
