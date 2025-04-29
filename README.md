@@ -62,6 +62,22 @@ sudo /Applications/Docker.app/Contents/MacOS/install vmnetd
 
 Try the `localstack start -d` command again.
 
+## Creating an Amazon Connect Instance (SAM)
+
+Following parameters are used to create an Amazon Connect Instance:
+
+| Parameter                      | Description                                                                                                     | Type                          | Required                            |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------- | ----------------------------- | ----------------------------------- |
+| IdentityManagementType         | Specifies whether the instance uses Connect-managed or SAML-based identity management                           | String (CONNECT_MANAGED/SAML) | Optional (Default: CONNECT_MANAGED) |
+| InstanceAliasName              | The alias for the Connect instance (must start with a letter/number, can contain letters, numbers, and hyphens) | String                        | Required                            |
+| IsAutoResolveBestVoicesEnabled | Enables automatic resolution of best voices for text-to-speech                                                  | Boolean                       | Optional (Default: true)            |
+| IsContactflowLogsEnabled       | Enables logging for contact flows                                                                               | Boolean                       | Optional (Default: true)            |
+| IsContactLensEnabled           | Enables Amazon Connect Contact Lens features                                                                    | Boolean                       | Optional (Default: true)            |
+| IsEarlyMediaEnabled            | Enables early media for calls                                                                                   | Boolean                       | Optional (Default: true)            |
+| IsInboundCallsEnabled          | Enables inbound calling capabilities                                                                            | Boolean                       | Optional (Default: true)            |
+| IsOutboundCallsEnabled         | Enables outbound calling capabilities                                                                           | Boolean                       | Optional (Default: true)            |
+| IsUseCustomTTSVoicesEnabled    | Enables custom text-to-speech voices                                                                            | Boolean                       | Optional (Default: true)            |
+
 ## What's inside?
 
 This Turborepo includes the following packages/apps:
