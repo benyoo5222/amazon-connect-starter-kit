@@ -64,7 +64,8 @@ Try the `localstack start -d` command again.
 
 ## Creating an Amazon Connect Instance (SAM)
 
-> [!IMPORTANT] Your user should have the `AmazonConnect_FullAccess` to create an Amazon Connect Instance.
+> [!IMPORTANT]
+> Your user should have the `AmazonConnect_FullAccess` to create an Amazon Connect Instance.
 
 _Note: As of 05-25, this CloudFormation Amazon Connect Instance Resource is under preview and can change._
 
