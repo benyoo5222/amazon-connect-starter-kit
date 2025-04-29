@@ -1,0 +1,129 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >-
+  Template to create/update an Amazon Connect instance.
+
+Parameters:
+  ##########################
+  # Instance Configuration #
+  ##########################
+  IdentityManagementType:
+    Type: String
+    Default: CONNECT_MANAGED
+    AllowedValues:
+      - CONNECT_MANAGED
+      - SAML
+
+  InstanceAliasName:
+    Type: String
+    MinLength: 1
+    AllowedPattern: ^(?!d-)([\da-zA-Z]+)([-]*[\da-zA-Z])*$
+
+  IsAutoResolveBestVoicesEnabled:
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
+  IsContactflowLogsEnabled:
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
+  IsContactLensEnabled:
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
+  IsEarlyMediaEnabled:
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
+  IsInboundCallsEnabled:
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
+  IsOutboundCallsEnabled:
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
+  IsUseCustomTTSVoicesEnabled:
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
+Mappings:
+  ############################
+  # Available Regions for AC #
+  ############################
+  AmazonConnectRegions:
+    us-east-1:
+      isAvailable: true
+    us-west-2:
+      isAvailable: true
+    af-south-1:
+      isAvailable: true
+    ap-northeast-2:
+      isAvailable: true
+    ap-southeast-1:
+      isAvailable: true
+    ap-southeast-2:
+      isAvailable: true
+    ap-northeast-1:
+      isAvailable: true
+    ca-central-1:
+      isAvailable: true
+    eu-central-1:
+      isAvailable: true
+    eu-west-2:
+      isAvailable: true
+    us-gov-west-1:
+      isAvailable: true
+
+Conditions:
+  IsConnectAvailableInRegion:
+    !Equals [
+      !FindInMap [AmazonConnectRegions, !Ref "AWS::Region", isAvailable],
+      true,
+    ]
+
+Resources:
+  ##############################################################
+  # AC Instance (As of 05-25 this is not GA)                   #
+  # Additional Information:                                    #
+  #  - Amazon Connect enforces a limit of 100 combined         #
+  #    instance creation and deletions every 30 days           #
+  #  - Cannot update Identity Managent Type (Connect VS SAML)  #
+  #    after the instance is created                           #
+  ##############################################################
+
+  ConnectInstance:
+    Type: AWS::Connect::Instance
+    Condition: IsConnectAvailableInRegion
+    Properties:
+      IdentityManagementType: !Ref IdentityManagementType
+      InstanceAlias: !Ref InstanceAliasName
+      Attributes:
+        AutoResolveBestVoices: !Ref IsAutoResolveBestVoicesEnabled
+        ContactflowLogs: !Ref IsContactflowLogsEnabled
+        ContactLens: !Ref IsContactLensEnabled
+        EarlyMedia: !Ref IsEarlyMediaEnabled
+        InboundCalls: !Ref IsInboundCallsEnabled
+        OutboundCalls: !Ref IsOutboundCallsEnabled
+        UseCustomTTSVoices: !Ref IsUseCustomTTSVoicesEnabled
