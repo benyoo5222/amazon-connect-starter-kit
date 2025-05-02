@@ -68,6 +68,29 @@ Parameters:
       - true
       - false
 
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
+      - local
+
+  ##########################
+  # Storage Configuration #
+  ##########################
+  ConnectCallRecordingsS3Prefix:
+    Type: String
+    Default: CallRecordings
+
+  ConnectChatTranscriptsS3Prefix:
+    Type: String
+    Default: ChatTranscripts
+
+  ConnectScheduledReportsS3Prefix:
+    Type: String
+    Default: Reports
+
 Mappings:
   ############################
   # Available Regions for AC #
@@ -112,7 +135,7 @@ Conditions:
 
 Resources:
   ##############################################################
-  # AC Instance (As of 05-25 this is not GA & can change)      #
+  # AC INSTANCE (As of 05-25 this is not GA & can change)      #
   # Additional Information:                                    #
   #  - Amazon Connect enforces a limit of 100 combined         #
   #    instance creation and deletions every 30 days           #
@@ -136,3 +159,225 @@ Resources:
         # As of 05-25, you must be on the AWS's allowed list to use this.
         # UseCustomTTSVoices: !Ref IsUseCustomTTSVoicesEnabled #
         #########################################################
+
+  ##############################################################
+  #                                                            #
+  #                AC DATA STORAGE                             #
+  #                                                            #
+  ##############################################################
+  #################################
+  # AC KMS Key Role Configuration #
+  #################################
+  ConnectKMSKeyRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: Role for any identity in the account to use the KMS Key
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: ConnectKMSKeyPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "kms:DescribeKey"
+                  - "kms:Encrypt"
+                  - "kms:Decrypt"
+                  - "kms:ReEncrypt*"
+                  - "kms:GenerateDataKey*"
+                Resource: "*"
+
+  #####################################
+  # AC Instance KMS Key Configuration #
+  #####################################
+  ConnectKMSKey:
+    Type: AWS::KMS::Key
+    DeletionPolicy: Retain # Retain the key when the instance is deleted
+    UpdateReplacePolicy: Retain # Update fails even with this policy on KeyUsage, MultiRegion, KeySpec
+    Properties:
+      KeyUsage: ENCRYPT_DECRYPT
+      Description: KMS key for Amazon Connect Data
+      EnableKeyRotation: true
+      Origin: AWS_KMS # Default
+      KeySpec: SYMMETRIC_DEFAULT # Default
+      Enabled: true # Default
+      RotationPeriodInDays: 365 # Default
+      PendingWindowInDays: 30 # Default (Waits 30 days before key deleted permanently)
+      KeyPolicy:
+        Version: "2012-10-17"
+        Id: !Ref AWS::StackName
+        Statement:
+          - Sid: Allow any identity in the account (With the correct permissions) to manage the key
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action:
+              - "kms:Create*"
+              - "kms:Describe*"
+              - "kms:Enable*"
+              - "kms:List*"
+              - "kms:Put*"
+              - "kms:Update*"
+              - "kms:Revoke*"
+              - "kms:Disable*"
+              - "kms:Get*"
+              - "kms:Delete*"
+              - "kms:ScheduleKeyDeletion"
+              - "kms:CancelKeyDeletion"
+            Resource: "*"
+          - Sid: Allow the ConnectKMSKeyRole to use the key
+            Effect: Allow
+            Principal:
+              AWS: !GetAtt ConnectKMSKeyRole.Arn
+            Action:
+              - "kms:DescribeKey"
+              - "kms:Encrypt"
+              - "kms:Decrypt"
+              - "kms:ReEncrypt*"
+              - "kms:GenerateDataKey*"
+            Resource: "*"
+          - Sid: Allow access through Connect for all principals in the account that are authorized to use Connect
+            Effect: Allow
+            Principal:
+              AWS: "*"
+            Action:
+              - "kms:CreateGrant"
+              - "kms:Describe*"
+              - "kms:Get*"
+              - "kms:List*"
+            Resource: "*"
+            Condition:
+              StringEquals:
+                kms:CallerAccount: !Ref AWS::AccountId
+                kms:ViaService: !Sub "connect.${AWS::Region}.amazonaws.com"
+          - Sid: Allow Connect to directly describe the key
+            Effect: Allow
+            Principal:
+              Service: "connect.amazonaws.com"
+            Action:
+              - "kms:Describe*"
+              - "kms:Get*"
+              - "kms:List*"
+            Resource: "*"
+          - Sid: "Restrict direct usage"
+            Effect: Deny
+            Principal: "*"
+            Action:
+              - "kms:Encrypt"
+              - "kms:GenerateDataKey*"
+              - "kms:ReEncrypt*"
+            Resource: "*"
+            Condition:
+              "Null":
+                kms:ViaService: "true"
+          - Sid: "Restrict usage to Connect data"
+            Effect: Deny
+            Principal: "*"
+            Action:
+              - "kms:Encrypt"
+              - "kms:GenerateDataKey*"
+              - "kms:ReEncrypt*"
+            Resource: "*"
+            Condition:
+              "Null":
+                kms:EncryptionContext:aws:connect:OrganizationId: "true"
+          - Sid: Allow access through S3 for all principals in the account that are authorized to use S3
+            Effect: Allow
+            Principal:
+              AWS: "*"
+            Action:
+              - "kms:Decrypt"
+            Resource: "*"
+            Condition:
+              StringEquals:
+                kms:ViaService: !Sub s3.${AWS::Region}.amazonaws.com
+                kms:CallerAccount: !Ref AWS::AccountId
+          - Sid: Allow access through KVS for all principals in the account that are authorized to use KVS
+            Effect: Allow
+            Principal:
+              AWS: "*"
+            Action:
+              - "kms:Decrypt"
+            Resource: "*"
+            Condition:
+              StringEquals:
+                kms:ViaService: !Sub kvs.${AWS::Region}.amazonaws.com
+                kms:CallerAccount: !Ref AWS::AccountId
+
+  ##################################
+  # AC KMS Key Alias Configuration #
+  ##################################
+  ConnectKMSKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub "alias/${AWS::StackName}/connect/${Environment}"
+      TargetKeyId: !GetAtt ConnectKMSKey.Arn
+
+  ########################################
+  # AC Instance S3 Storage Configuration #
+  ########################################
+  ConnectStorageBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain # Retain the bucket when the instance is deleted
+    UpdateReplacePolicy: Retain # Retain the bucket when the bucket needs to be replaced
+
+  ########################################
+  # AC Instance Storage Configurations   #
+  ########################################
+  ConnectCallRecordingsStorageConfig:
+    Type: AWS::Connect::InstanceStorageConfig
+    Condition: IsConnectAvailableInRegion
+    Properties:
+      InstanceArn: !GetAtt ConnectInstance.Arn
+      ResourceType: CALL_RECORDINGS
+      ##############################################################
+      # Connect uses default KMS key (aws/connect) for encryption  #
+      ##############################################################
+      StorageType: S3
+      S3Config:
+        BucketName: !Ref ConnectStorageBucket
+        BucketPrefix: !Ref ConnectCallRecordingsS3Prefix
+        EncryptionConfig:
+          EncryptionType: KMS
+          KeyId: !GetAtt ConnectKMSKey.Arn
+
+  ConnectChatTranscriptsStorageConfig:
+    Type: AWS::Connect::InstanceStorageConfig
+    Condition: IsConnectAvailableInRegion
+    Properties:
+      InstanceArn: !GetAtt ConnectInstance.Arn
+      ResourceType: CHAT_TRANSCRIPTS
+      ##############################################################
+      # Connect uses default KMS key (aws/connect) for encryption  #
+      ##############################################################
+      StorageType: S3
+      S3Config:
+        BucketName: !Ref ConnectStorageBucket
+        BucketPrefix: !Ref ConnectChatTranscriptsS3Prefix
+        EncryptionConfig:
+          EncryptionType: KMS
+          KeyId: !GetAtt ConnectKMSKey.Arn
+
+  ConnectScheduledReportsStorageConfig:
+    Type: AWS::Connect::InstanceStorageConfig
+    Condition: IsConnectAvailableInRegion
+    Properties:
+      InstanceArn: !GetAtt ConnectInstance.Arn
+      ResourceType: SCHEDULED_REPORTS
+      ##############################################################
+      # Connect uses default KMS key (aws/connect) for encryption  #
+      ##############################################################
+      StorageType: S3
+      S3Config:
+        BucketName: !Ref ConnectStorageBucket
+        BucketPrefix: !Ref ConnectScheduledReportsS3Prefix
+        EncryptionConfig:
+          EncryptionType: KMS
+          KeyId: !GetAtt ConnectKMSKey.Arn

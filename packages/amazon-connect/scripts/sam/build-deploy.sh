@@ -7,13 +7,20 @@ echo "Workspace root: $WORKSPACE_ROOT"
 # Source the environment file using absolute path
 . "$WORKSPACE_ROOT/packages/amazon-connect/scripts/sam/env.sh"
 
+# Set SAM command based on environment
+if [ "$ENVIRONMENT" = "local" ]; then
+    SAM_CMD="samlocal"
+else
+    SAM_CMD="sam"
+fi
+
 echo "Building the SAM template for the Connect Instance"
 ########################################################
 # Build the SAM template for the Connect Instance
 # Note: No parameter overrides at the build step. Only
 #       done at the deploy step.
 ########################################################
-sam build \
+$SAM_CMD build \
     --template-file "$WORKSPACE_ROOT/packages/amazon-connect/amazon-connect-instance-template.yml" \
     --profile $PROFILE
 
@@ -24,7 +31,7 @@ echo "Deploying the SAM template for the Connect Instance"
 # Note: Sam Deploy automatically uses the template
 #       built in the build step. (.aws-sam/build/template.yaml)
 ########################################################
-sam deploy \
+$SAM_CMD deploy \
     $([ "$IS_GUIDED" = "true" ] && echo "--guided") \
     --stack-name $STACK_NAME \
     --region $REGION \
@@ -38,5 +45,6 @@ sam deploy \
         IsInboundCallsEnabled=$IsInboundCallsEnabled \
         IsOutboundCallsEnabled=$IsOutboundCallsEnabled \
         IsUseCustomTTSVoicesEnabled=$IsUseCustomTTSVoicesEnabled \
+        Environment=$ENVIRONMENT \
     --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
     --profile $PROFILE
