@@ -10,6 +10,7 @@ IsEarlyMediaEnabled=true
 IsInboundCallsEnabled=true
 IsOutboundCallsEnabled=true
 IsUseCustomTTSVoicesEnabled=true
+ENVIRONMENT=dev # dev, prod, etc. But local means localstack
 
 ########################################################
 # Connect Storage Configuration Parameters
@@ -21,7 +22,6 @@ ScheduledReportsS3BucketPrefix=Reports
 ########################################################
 # CLI Specific Parameters
 ########################################################
-ENVIRONMENT=dev # dev, prod, etc. But local means localstack
 PROFILE=default # Change this to your profile name (SSO)
 IS_GUIDED=true # Set to false to disable guided prompts
 STACK_NAME=amazon-connect-starter-kit # Change this to your stack name

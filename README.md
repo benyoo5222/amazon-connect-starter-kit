@@ -67,6 +67,9 @@ Try the `localstack start -d` command again.
 > [!IMPORTANT]
 > Your user should have the `AmazonConnect_FullAccess` policy to create an Amazon Connect Instance.
 
+> [!IMPORTANT]
+> Please look at the [Configuration Parameters](#configuration-parameters) section to set the correct parameters for your deployment.
+
 > [!NOTE]
 > As of 05-25, this CloudFormation Amazon Connect Instance Resource is under preview and can change.
 
@@ -76,24 +79,23 @@ Try the `localstack start -d` command again.
 > [!NOTE]
 > Creating an Amazon Connect Instance is only supported on AWS; LocalStack does not support it yet.
 
-Following parameters are used to create an Amazon Connect Instance:
+> [!NOTE]
+> This only supports `CONNECT_MANAGED` or `SAML` for Identity Management Type.
+> It does not support `Existing Directory`.
 
-| Parameter                      | Description                                                                                                     | Type                          | Required                            |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------- | ----------------------------- | ----------------------------------- |
-| IdentityManagementType         | Specifies whether the instance uses Connect-managed or SAML-based identity management                           | String (CONNECT_MANAGED/SAML) | Optional (Default: CONNECT_MANAGED) |
-| InstanceAliasName              | The alias for the Connect instance (must start with a letter/number, can contain letters, numbers, and hyphens) | String                        | Required                            |
-| IsAutoResolveBestVoicesEnabled | Enables automatic resolution of best voices for text-to-speech                                                  | Boolean                       | Optional (Default: true)            |
-| IsContactflowLogsEnabled       | Enables logging for contact flows                                                                               | Boolean                       | Optional (Default: true)            |
-| IsContactLensEnabled           | Enables Amazon Connect Contact Lens features                                                                    | Boolean                       | Optional (Default: true)            |
-| IsEarlyMediaEnabled            | Enables early media for calls                                                                                   | Boolean                       | Optional (Default: true)            |
-| IsInboundCallsEnabled          | Enables inbound calling capabilities                                                                            | Boolean                       | Optional (Default: true)            |
-| IsOutboundCallsEnabled         | Enables outbound calling capabilities                                                                           | Boolean                       | Optional (Default: true)            |
-| IsUseCustomTTSVoicesEnabled    | Enables custom text-to-speech voices                                                                            | Boolean                       | Optional (Default: true)            |
+### Deploying to AWS
 
-Following parameters are used to create an Amazon Connect Storage:
+First, create a env.sh file in the `packages/amazon-connect/scripts/sam` directory.
 
-Please note that this only supports `CONNECT_MANAGED` or `SAML` for Identity Management Type.
-It does not support `Existing Directory`.
+You can use the `setenv.sh` file as a template to set the correct parameters for your deployment.
+
+From the root of the project, run the following command:
+
+```sh
+./packages/amazon-connect/scripts/sam/build-deploy.sh
+```
+
+This will both build and deploy the SAM template to AWS as a CloudFormation stack.
 
 ## What gets created?
 
@@ -110,6 +112,13 @@ It does not support `Existing Directory`.
   - Cases enabled (Auto-enabled) But no domain
   - Contact Flow Logs enabled (Unless otherwise specified)
   - Use the best available voices for TTS (Unless otherwise specified)
+- S3 Bucket for Amazon Connect Data Storage
+  - Call Recordings (Encrypted with KMS Key created by this template)
+  - Chat Transcripts (Encrypted with KMS Key created by this template)
+  - Scheduled Reports (Encrypted with KMS Key created by this template)
+- KMS Key for Amazon Connect Data (Encryption and Decryption)
+- KMS Key Alias (alias/{Your Stack Name}/connect/{Environment})
+- IAM Role for any identity in the account to use the KMS Key
 
 ## Configuration Parameters
 
@@ -117,32 +126,32 @@ The following parameters can be configured in `packages/amazon-connect/scripts/s
 
 ### Connect Instance Parameters
 
-| Parameter                      | Description                                                                                                     | Default Value              |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------- | -------------------------- |
-| IdentityManagementType         | Specifies whether the instance uses Connect-managed or SAML-based identity management                           | CONNECT_MANAGED            |
-| InstanceAliasName              | The alias for the Connect instance (must start with a letter/number, can contain letters, numbers, and hyphens) | amazon-connect-starter-kit |
-| IsAutoResolveBestVoicesEnabled | Enables automatic resolution of best voices for text-to-speech                                                  | true                       |
-| IsContactflowLogsEnabled       | Enables logging for contact flows                                                                               | true                       |
-| IsContactLensEnabled           | Enables Amazon Connect Contact Lens features                                                                    | true                       |
-| IsEarlyMediaEnabled            | Enables early media for calls                                                                                   | true                       |
-| IsInboundCallsEnabled          | Enables inbound calling capabilities                                                                            | true                       |
-| IsOutboundCallsEnabled         | Enables outbound calling capabilities                                                                           | true                       |
-| IsUseCustomTTSVoicesEnabled    | Enables custom text-to-speech voices                                                                            | true                       |
+| Parameter                      | Description                                                                                                     | Default Value   | Required |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------- | --------------- | -------- |
+| IdentityManagementType         | Specifies whether the instance uses Connect-managed or SAML-based identity management                           | CONNECT_MANAGED | Optional |
+| InstanceAliasName              | The alias for the Connect instance (must start with a letter/number, can contain letters, numbers, and hyphens) | --              | Required |
+| ENVIRONMENT                    | The deployment environment (e.g., dev, prod)                                                                    | --              | Required |
+| IsAutoResolveBestVoicesEnabled | Enables automatic resolution of best voices for text-to-speech                                                  | true            | Optional |
+| IsContactflowLogsEnabled       | Enables logging for contact flows                                                                               | true            | Optional |
+| IsContactLensEnabled           | Enables Amazon Connect Contact Lens features                                                                    | true            | Optional |
+| IsEarlyMediaEnabled            | Enables early media for calls                                                                                   | true            | Optional |
+| IsInboundCallsEnabled          | Enables inbound calling capabilities                                                                            | true            | Optional |
+| IsOutboundCallsEnabled         | Enables outbound calling capabilities                                                                           | true            | Optional |
+| IsUseCustomTTSVoicesEnabled    | Enables custom text-to-speech voices                                                                            | true            | Optional |
 
 ### Connect Storage Configuration Parameters
 
-| Parameter                      | Description                                        | Default Value   |
-| ------------------------------ | -------------------------------------------------- | --------------- |
-| CallRecordingsS3BucketPrefix   | Prefix for the S3 bucket storing call recordings   | CallRecordings  |
-| ChatTranscriptsS3BucketPrefix  | Prefix for the S3 bucket storing chat transcripts  | ChatTranscripts |
-| ScheduledReportsS3BucketPrefix | Prefix for the S3 bucket storing scheduled reports | Reports         |
+| Parameter                      | Description                                        | Default Value   | Required |
+| ------------------------------ | -------------------------------------------------- | --------------- | -------- |
+| CallRecordingsS3BucketPrefix   | Prefix for the S3 bucket storing call recordings   | CallRecordings  | Optional |
+| ChatTranscriptsS3BucketPrefix  | Prefix for the S3 bucket storing chat transcripts  | ChatTranscripts | Optional |
+| ScheduledReportsS3BucketPrefix | Prefix for the S3 bucket storing scheduled reports | Reports         | Optional |
 
 ### CLI Specific Parameters
 
-| Parameter   | Description                                  | Default Value                    |
-| ----------- | -------------------------------------------- | -------------------------------- |
-| ENVIRONMENT | The deployment environment (e.g., dev, prod) | dev                              |
-| PROFILE     | AWS CLI profile name for authentication      | amazon-connect-starter-admin-dev |
-| IS_GUIDED   | Whether to use guided deployment mode        | false                            |
-| STACK_NAME  | Name of the CloudFormation stack             | amazon-connect-starter-kit       |
-| REGION      | AWS region for deployment                    | us-east-1                        |
+| Parameter  | Description                             | Default Value | Required |
+| ---------- | --------------------------------------- | ------------- | -------- |
+| PROFILE    | AWS CLI profile name for authentication | --            | Required |
+| IS_GUIDED  | Whether to use guided deployment mode   | false         | Required |
+| STACK_NAME | Name of the CloudFormation stack        | --            | Required |
+| REGION     | AWS region for deployment               | --            | Required |
