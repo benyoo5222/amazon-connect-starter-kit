@@ -48,3 +48,6 @@ env.sh
 
 # samconfig.toml
 samconfig.toml
+
+# .vscode
+.vscode/
