@@ -50,4 +50,4 @@ env.sh
 samconfig.toml
 
 # .vscode
-.vscode/
+.vscode
