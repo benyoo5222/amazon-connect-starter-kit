@@ -18,57 +18,16 @@ This is a starter kit for building a contact center using Amazon Connect.
 - LocalStack AWS CLI installed - venv
 - LocalStack SAM CLI installed - venv
 
-### AWS CLI Authentication (SSO)
-
-By using SSO, you can avoid having to manage long-term credentials for your AWS account.
-
-For more info, check out the [AWS CLI SSO docs](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html)
-
-#### Configuring your SSO Profile
-
-1. Run `aws configure sso`
-2. Enter a session name (e.g. `AmazonConnectStarterKit-<Environment>`)
-3. Enter the SSO Start URL (e.g. `https://d-906766655d.awsapps.com/start/#`)
-4. Enter the SSO Region (e.g. `us-east-1`)
-5. Enter the SSO Registration Scope (Press Enter for `sso:account:access`)
-6. Select the AWS account attached to the user
-7. Select the appropriate role from the list (e.g. `AdministratorAccess`)
-8. Enter the Default Client Region (e.g. `us-east-1`)
-9. Enter the Default Output Format (Press enter for `json`)
-10. Enter a profile name (e.g. `<YourName>-<Environment>`)
-
-You can check your configuration by running `aws configure list` or looking at the `~/.aws/config` file
-
-#### Logging in to an IAM Identity Center Session (AWS CLI SSO)
-
-1. Run `aws sso login --profile <profile-name>` (e.g. `aws sso login --profile <YourName>-<Environment>`)
-
-This will recache your profile's credentials and place them in `~/.aws/sso/cache`
-
-## Setup
-
-For runnning LocalStack, run the following commands:
-
-```sh
-localstack auth set-token <YOUR_AUTH_TOKEN>
-localstack start -d
-```
-
-If you run into issues pulling down the localstack pro image, try running:
-
-```sh
-sudo /Applications/Docker.app/Contents/MacOS/install vmnetd
-```
-
-Try the `localstack start -d` command again.
-
-## Creating an Amazon Connect Instance (SAM)
+## Creating an Amazon Connect + Related Resources (SAM)
 
 > [!IMPORTANT]
 > Your user should have the `AmazonConnect_FullAccess` policy to create an Amazon Connect Instance.
 
 > [!IMPORTANT]
 > Please look at the [Configuration Parameters](#configuration-parameters) section to set the correct parameters for your deployment.
+
+> [!IMPORTANT]
+> Please look at the [AWS CLI Configuration](#aws-cli-configuration) section prior to deploying this template.
 
 > [!NOTE]
 > As of 05-25, this CloudFormation Amazon Connect Instance Resource is under preview and can change.
@@ -85,7 +44,7 @@ Try the `localstack start -d` command again.
 
 ### Deploying to AWS
 
-First, create a env.sh file in the `packages/amazon-connect/scripts/sam` directory.
+First, create an `env.sh` file in the `packages/amazon-connect/scripts/sam` directory.
 
 You can use the `setenv.sh` file as a template to set the correct parameters for your deployment.
 
@@ -119,6 +78,56 @@ This will both build and deploy the SAM template to AWS as a CloudFormation stac
 - KMS Key for Amazon Connect Data (Encryption and Decryption)
 - KMS Key Alias (alias/{Your Stack Name}/connect/{Environment})
 - IAM Role for any identity in the account to use the KMS Key
+
+## AWS CLI Configuration
+
+This section is for configuring the AWS CLI.
+
+This will allow you to access your AWS resources.
+
+### AWS CLI Authentication (SSO)
+
+By using SSO, you can avoid having to manage long-term credentials for your AWS account.
+
+For more info, check out the [AWS CLI SSO docs](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html)
+
+#### Configuring your SSO Profile
+
+1. Run `aws configure sso`
+2. Enter a session name (e.g. `AmazonConnectStarterKit-<Environment>`)
+3. Enter the SSO Start URL (e.g. `https://d-906766655d.awsapps.com/start/#`)
+4. Enter the SSO Region (e.g. `us-east-1`)
+5. Enter the SSO Registration Scope (Press Enter for `sso:account:access`)
+6. Select the AWS account attached to the user
+7. Select the appropriate role from the list (e.g. `AdministratorAccess`)
+8. Enter the Default Client Region (e.g. `us-east-1`)
+9. Enter the Default Output Format (Press enter for `json`)
+10. Enter a profile name (e.g. `<YourName>-<Environment>`)
+
+You can check your configuration by running `aws configure list` or looking at the `~/.aws/config` file
+
+#### Logging in to an IAM Identity Center Session (AWS CLI SSO)
+
+1. Run `aws sso login --profile <profile-name>` (e.g. `aws sso login --profile <YourName>-<Environment>`)
+
+This will recache your profile's credentials and place them in `~/.aws/sso/cache`
+
+## LocalStack Setup
+
+For runnning LocalStack, run the following commands:
+
+```sh
+localstack auth set-token <YOUR_AUTH_TOKEN>
+localstack start -d
+```
+
+If you run into issues pulling down the localstack pro image, try running:
+
+```sh
+sudo /Applications/Docker.app/Contents/MacOS/install vmnetd
+```
+
+Try the `localstack start -d` command again.
 
 ## Configuration Parameters
 
