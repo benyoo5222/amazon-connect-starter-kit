@@ -21,7 +21,7 @@ This is a starter kit for building a contact center using Amazon Connect.
 ## Creating an Amazon Connect + Related Resources (SAM)
 
 > [!IMPORTANT]
-> Your user should have the `AmazonConnect_FullAccess` policy to create an Amazon Connect Instance.
+> Your aws user needs to have the `AmazonConnect_FullAccess` policy to create an Amazon Connect Instance.
 
 > [!IMPORTANT]
 > Please look at the [Configuration Parameters](#configuration-parameters) section to set the correct parameters for your deployment.
@@ -72,18 +72,19 @@ This will both build and deploy the SAM template to AWS as a CloudFormation stac
   - Contact Flow Logs enabled (Unless otherwise specified)
   - Use the best available voices for TTS (Unless otherwise specified)
 - S3 Bucket for Amazon Connect Data Storage
+- KMS Key for Amazon Connect Data (Encryption and Decryption)
+- KMS Key Alias (`alias/{Your Stack Name}/connect/{Environment}`)
+- IAM Role for any identity in the account to use the KMS Key
+- Amazon Connect Instance Storage Configurations
   - Call Recordings (Encrypted with KMS Key created by this template)
   - Chat Transcripts (Encrypted with KMS Key created by this template)
   - Scheduled Reports (Encrypted with KMS Key created by this template)
-- KMS Key for Amazon Connect Data (Encryption and Decryption)
-- KMS Key Alias (alias/{Your Stack Name}/connect/{Environment})
-- IAM Role for any identity in the account to use the KMS Key
 
 ## AWS CLI Configuration
 
 This section is for configuring the AWS CLI.
 
-This will allow you to access your AWS resources.
+This will allow you to access your AWS resources from the command line.
 
 ### AWS CLI Authentication (SSO)
 
