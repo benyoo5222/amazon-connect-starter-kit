@@ -98,6 +98,8 @@ Parameters:
     Type: Number
     Description: The number of hours for the data records to be available in the CR stream.
     Default: 24
+    MinValue: 24
+    MaxValue: 8760 # 365 days
 
   IsCRStreamServerSideEncryptionEnabled:
     Type: String
@@ -110,6 +112,8 @@ Parameters:
     Type: Number
     Description: The number of hours for the data records to be available in the Agent Event stream.
     Default: 24
+    MinValue: 24
+    MaxValue: 8760 # 365 days
 
   IsAgentEventStreamServerSideEncryptionEnabled:
     Type: String
@@ -329,7 +333,6 @@ Resources:
                   - kinesis:ListShards
                 Resource:
                   - !GetAtt CRKinesisStream.Arn
-                  - !GetAtt AgentEventKinesisStream.Arn
 
   CRKinesisFirehose:
     Type: AWS::KinesisFirehose::DeliveryStream
@@ -407,11 +410,11 @@ Resources:
     Properties:
       InstanceArn: !GetAtt ConnectInstance.Arn
       ResourceType: "CONTACT_TRACE_RECORDS"
-      #######################################
-      # As of 05-25, the Kinesis Firehose   #
-      # Does not seem to be supported yet   #
-      # Use Kinesis Stream instead          #
-      #######################################
+      #####################################
+      # As of 05-25, the Kinesis Firehose #
+      # Does not seem to be supported yet #
+      # Use Kinesis Stream instead        #
+      #####################################
       # StorageType: KINESIS_FIREHOSE
       # KinesisFirehoseConfig:
       #   FirehoseArn: !GetAtt CRKinesisFirehose.Arn
