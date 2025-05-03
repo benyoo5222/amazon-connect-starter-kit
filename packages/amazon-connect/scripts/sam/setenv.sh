@@ -20,6 +20,14 @@ ChatTranscriptsS3BucketPrefix=ChatTranscripts
 ScheduledReportsS3BucketPrefix=Reports
 
 ########################################################
+# Connect Stream Configuration Parameters
+########################################################
+CRStreamRetentionPeriod=24
+IsCRStreamServerSideEncryptionEnabled=true
+AgentEventStreamRetentionPeriod=24
+IsAgentEventStreamServerSideEncryptionEnabled=true
+
+########################################################
 # CLI Specific Parameters
 ########################################################
 PROFILE=default # Change this to your profile name (SSO)

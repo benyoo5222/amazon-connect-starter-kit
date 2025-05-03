@@ -91,6 +91,33 @@ Parameters:
     Type: String
     Default: Reports
 
+  #########################
+  # Kinesis Configuration #
+  #########################
+  CRStreamRetentionPeriod:
+    Type: Number
+    Description: The number of hours for the data records to be available in the CR stream.
+    Default: 24
+
+  IsCRStreamServerSideEncryptionEnabled:
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
+  AgentEventStreamRetentionPeriod:
+    Type: Number
+    Description: The number of hours for the data records to be available in the Agent Event stream.
+    Default: 24
+
+  IsAgentEventStreamServerSideEncryptionEnabled:
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
 Mappings:
   ############################
   # Available Regions for AC #
@@ -129,19 +156,30 @@ Conditions:
       true,
     ]
 
+  #####################################
+  # Connect Kinesis Stream Conditions #
+  #####################################
+  EnableCRStreamServerSideEncryption:
+    !Equals [!Ref IsCRStreamServerSideEncryptionEnabled, true]
+
+  EnableAgentEventStreamServerSideEncryption:
+    !Equals [!Ref IsAgentEventStreamServerSideEncryptionEnabled, true]
+
   ###########################################
   # Connect Features Availabilty Conditions #
   ###########################################
 
 Resources:
-  ##############################################################
-  # AC INSTANCE (As of 05-25 this is not GA & can change)      #
-  # Additional Information:                                    #
-  #  - Amazon Connect enforces a limit of 100 combined         #
-  #    instance creation and deletions every 30 days           #
-  #  - Cannot update Identity Managent Type (Connect VS SAML)  #
-  #    after the instance is created                           #
-  ##############################################################
+  ###############################################################
+  ###############################################################
+  ## AC INSTANCE (As of 05-25 this is not GA & can change)     ##
+  ## Additional Information:                                   ##
+  ##  - Amazon Connect enforces a limit of 100 combined        ##
+  ##    instance creation and deletions every 30 days          ##
+  ##  - Cannot update Identity Managent Type (Connect VS SAML) ##
+  ##    after the instance is created                          ##
+  ###############################################################
+  ###############################################################
   ConnectInstance:
     Type: AWS::Connect::Instance
     Condition: IsConnectAvailableInRegion
@@ -155,50 +193,20 @@ Resources:
         EarlyMedia: !Ref IsEarlyMediaEnabled
         InboundCalls: !Ref IsInboundCallsEnabled
         OutboundCalls: !Ref IsOutboundCallsEnabled
-        #########################################################
         # As of 05-25, you must be on the AWS's allowed list to use this.
         # UseCustomTTSVoices: !Ref IsUseCustomTTSVoicesEnabled #
-        #########################################################
 
   ##############################################################
-  #                                                            #
-  #                AC DATA STORAGE                             #
-  #                                                            #
+  ##                                                          ##
+  ##                AC DATA STORAGE/STREAMING                 ##
+  ##                                                          ##
   ##############################################################
-  #################################
-  # AC KMS Key Role Configuration #
-  #################################
-  ConnectKMSKeyRole:
-    Type: AWS::IAM::Role
-    Properties:
-      Description: Role for any identity in the account to use the KMS Key
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
-            Action:
-              - "sts:AssumeRole"
-      Policies:
-        - PolicyName: ConnectKMSKeyPolicy
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  - "kms:DescribeKey"
-                  - "kms:Encrypt"
-                  - "kms:Decrypt"
-                  - "kms:ReEncrypt*"
-                  - "kms:GenerateDataKey*"
-                Resource: "*"
-
   #####################################
   # AC Instance KMS Key Configuration #
   #####################################
   ConnectKMSKey:
     Type: AWS::KMS::Key
+    Condition: IsConnectAvailableInRegion
     DeletionPolicy: Retain # Retain the key when the instance is deleted
     UpdateReplacePolicy: Retain # Update fails even with this policy on KeyUsage, MultiRegion, KeySpec
     Properties:
@@ -214,111 +222,128 @@ Resources:
         Version: "2012-10-17"
         Id: !Ref AWS::StackName
         Statement:
-          - Sid: Allow any identity in the account (With the correct permissions) to manage the key
+          ######################################################################################
+          # !IMPORTANT: This allows any IAM Identity to manage the key [Ownership is on IAM]   #
+          #   If you need to limit this, please add key policies and remove the root principal #
+          ######################################################################################
+          - Sid: Allow any identity in the account (With the correct permissions) to manage the key [Ownership is on IAM]
             Effect: Allow
             Principal:
               AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
             Action:
-              - "kms:Create*"
-              - "kms:Describe*"
-              - "kms:Enable*"
-              - "kms:List*"
-              - "kms:Put*"
-              - "kms:Update*"
-              - "kms:Revoke*"
-              - "kms:Disable*"
-              - "kms:Get*"
-              - "kms:Delete*"
-              - "kms:ScheduleKeyDeletion"
-              - "kms:CancelKeyDeletion"
+              - "kms:*"
             Resource: "*"
-          - Sid: Allow the ConnectKMSKeyRole to use the key
-            Effect: Allow
-            Principal:
-              AWS: !GetAtt ConnectKMSKeyRole.Arn
-            Action:
-              - "kms:DescribeKey"
-              - "kms:Encrypt"
-              - "kms:Decrypt"
-              - "kms:ReEncrypt*"
-              - "kms:GenerateDataKey*"
-            Resource: "*"
-          - Sid: Allow access through Connect for all principals in the account that are authorized to use Connect
-            Effect: Allow
-            Principal:
-              AWS: "*"
-            Action:
-              - "kms:CreateGrant"
-              - "kms:Describe*"
-              - "kms:Get*"
-              - "kms:List*"
-            Resource: "*"
-            Condition:
-              StringEquals:
-                kms:CallerAccount: !Ref AWS::AccountId
-                kms:ViaService: !Sub "connect.${AWS::Region}.amazonaws.com"
-          - Sid: Allow Connect to directly describe the key
-            Effect: Allow
-            Principal:
-              Service: "connect.amazonaws.com"
-            Action:
-              - "kms:Describe*"
-              - "kms:Get*"
-              - "kms:List*"
-            Resource: "*"
-          - Sid: "Restrict direct usage"
-            Effect: Deny
-            Principal: "*"
-            Action:
-              - "kms:Encrypt"
-              - "kms:GenerateDataKey*"
-              - "kms:ReEncrypt*"
-            Resource: "*"
-            Condition:
-              "Null":
-                kms:ViaService: "true"
-          - Sid: "Restrict usage to Connect data"
-            Effect: Deny
-            Principal: "*"
-            Action:
-              - "kms:Encrypt"
-              - "kms:GenerateDataKey*"
-              - "kms:ReEncrypt*"
-            Resource: "*"
-            Condition:
-              "Null":
-                kms:EncryptionContext:aws:connect:OrganizationId: "true"
-          - Sid: Allow access through S3 for all principals in the account that are authorized to use S3
-            Effect: Allow
-            Principal:
-              AWS: "*"
-            Action:
-              - "kms:Decrypt"
-            Resource: "*"
-            Condition:
-              StringEquals:
-                kms:ViaService: !Sub s3.${AWS::Region}.amazonaws.com
-                kms:CallerAccount: !Ref AWS::AccountId
-          - Sid: Allow access through KVS for all principals in the account that are authorized to use KVS
-            Effect: Allow
-            Principal:
-              AWS: "*"
-            Action:
-              - "kms:Decrypt"
-            Resource: "*"
-            Condition:
-              StringEquals:
-                kms:ViaService: !Sub kvs.${AWS::Region}.amazonaws.com
-                kms:CallerAccount: !Ref AWS::AccountId
 
   ##################################
   # AC KMS Key Alias Configuration #
   ##################################
   ConnectKMSKeyAlias:
     Type: AWS::KMS::Alias
+    Condition: IsConnectAvailableInRegion
     Properties:
       AliasName: !Sub "alias/${AWS::StackName}/connect/${Environment}"
       TargetKeyId: !GetAtt ConnectKMSKey.Arn
+
+  ###################################
+  # AC Kinesis Stream Configuration #
+  # For CR and Agent Event Streams  #
+  ###################################
+  CRKinesisStream:
+    Type: AWS::Kinesis::Stream
+    Condition: IsConnectAvailableInRegion
+    DeletionPolicy: Delete # Delete the stream when the instance is deleted
+    # Deleting the stream if update requires a replacement
+    #  Since data will most likely be stored in S3, this shouldn't be an issue
+    UpdateReplacePolicy: Delete
+    Properties:
+      RetentionPeriodHours: !Ref CRStreamRetentionPeriod
+      StreamModeDetails:
+        StreamMode: "ON_DEMAND" # Default
+      StreamEncryption: !If
+        - "EnableCRStreamServerSideEncryption"
+        - EncryptionType: KMS
+          KeyId: !Ref ConnectKMSKeyAlias # Alias name, Alias ARN, KMS Key ARN, AWS Kinesis Key (alias/aws/kinesis) allowed
+        - !Ref AWS::NoValue
+
+  AgentEventKinesisStream:
+    Type: AWS::Kinesis::Stream
+    Condition: IsConnectAvailableInRegion
+    DeletionPolicy: Delete # Delete the stream when the instance is deleted
+    # Deleting the stream if update requires a replacement
+    #  Since data will most likely be stored in S3, this shouldn't be an issue
+    UpdateReplacePolicy: Delete
+    Properties:
+      RetentionPeriodHours: !Ref AgentEventStreamRetentionPeriod
+      StreamModeDetails:
+        StreamMode: "ON_DEMAND" # Default
+      StreamEncryption: !If
+        - "EnableAgentEventStreamServerSideEncryption"
+        - EncryptionType: KMS
+          KeyId: !Ref ConnectKMSKeyAlias # Alias name, Alias ARN, KMS Key ARN, AWS Kinesis Key (alias/aws/kinesis) allowed
+        - !Ref AWS::NoValue
+
+  #######################################
+  # AC Kinesis Firehose + Firehose Role #
+  # For CR Stream only                  #
+  #######################################
+  ACKinesisFirehoseServiceRole:
+    Type: AWS::IAM::Role
+    Condition: IsConnectAvailableInRegion
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "firehose.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: CRKinesisFirehosePolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              # Does not include policies for tranforming data using Lambda or Glue
+              - Effect: Allow
+                Action:
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/kinesisfirehose/*"
+              - Effect: Allow
+                Action:
+                  - "s3:AbortMultipartUpload"
+                  - "s3:GetBucketLocation"
+                  - "s3:GetObject"
+                  - "s3:ListBucket"
+                  - "s3:ListBucketMultipartUploads"
+                  - "s3:PutObject"
+                Resource:
+                  - !GetAtt ConnectStorageBucket.Arn
+                  - !Sub "${ConnectStorageBucket.Arn}/*"
+              - Effect: Allow
+                Action:
+                  - kinesis:DescribeStream
+                  - kinesis:GetShardIterator
+                  - kinesis:GetRecords
+                  - kinesis:ListShards
+                Resource:
+                  - !GetAtt CRKinesisStream.Arn
+                  - !GetAtt AgentEventKinesisStream.Arn
+
+  CRKinesisFirehose:
+    Type: AWS::KinesisFirehose::DeliveryStream
+    Condition: IsConnectAvailableInRegion
+    Properties:
+      DeliveryStreamType: KinesisStreamAsSource
+      KinesisStreamSourceConfiguration:
+        KinesisStreamARN: !GetAtt CRKinesisStream.Arn
+        RoleARN: !GetAtt ACKinesisFirehoseServiceRole.Arn
+      ExtendedS3DestinationConfiguration:
+        BucketARN: !GetAtt ConnectStorageBucket.Arn
+        RoleARN: !GetAtt ACKinesisFirehoseServiceRole.Arn
+        Prefix: "cr/!{timestamp:YYYY}/!{timestamp:MM}/!{timestamp:dd}/"
+        ErrorOutputPrefix: "cr-error/!{timestamp:yyy/MM/dd}/!{firehose:random-string}/!{firehose:error-output-type}/"
 
   ########################################
   # AC Instance S3 Storage Configuration #
@@ -337,9 +362,6 @@ Resources:
     Properties:
       InstanceArn: !GetAtt ConnectInstance.Arn
       ResourceType: CALL_RECORDINGS
-      ##############################################################
-      # Connect uses default KMS key (aws/connect) for encryption  #
-      ##############################################################
       StorageType: S3
       S3Config:
         BucketName: !Ref ConnectStorageBucket
@@ -354,9 +376,6 @@ Resources:
     Properties:
       InstanceArn: !GetAtt ConnectInstance.Arn
       ResourceType: CHAT_TRANSCRIPTS
-      ##############################################################
-      # Connect uses default KMS key (aws/connect) for encryption  #
-      ##############################################################
       StorageType: S3
       S3Config:
         BucketName: !Ref ConnectStorageBucket
@@ -371,9 +390,6 @@ Resources:
     Properties:
       InstanceArn: !GetAtt ConnectInstance.Arn
       ResourceType: SCHEDULED_REPORTS
-      ##############################################################
-      # Connect uses default KMS key (aws/connect) for encryption  #
-      ##############################################################
       StorageType: S3
       S3Config:
         BucketName: !Ref ConnectStorageBucket
@@ -381,3 +397,34 @@ Resources:
         EncryptionConfig:
           EncryptionType: KMS
           KeyId: !GetAtt ConnectKMSKey.Arn
+
+  #######################################
+  # AC Instance Stream Configurations   #
+  #######################################
+  ConnectCRStreamConfig:
+    Type: AWS::Connect::InstanceStorageConfig
+    Condition: IsConnectAvailableInRegion
+    Properties:
+      InstanceArn: !GetAtt ConnectInstance.Arn
+      ResourceType: "CONTACT_TRACE_RECORDS"
+      #######################################
+      # As of 05-25, the Kinesis Firehose   #
+      # Does not seem to be supported yet   #
+      # Use Kinesis Stream instead          #
+      #######################################
+      # StorageType: KINESIS_FIREHOSE
+      # KinesisFirehoseConfig:
+      #   FirehoseArn: !GetAtt CRKinesisFirehose.Arn
+      StorageType: "KINESIS_STREAM"
+      KinesisStreamConfig:
+        StreamArn: !GetAtt CRKinesisStream.Arn
+
+  ConnectAgentEventStreamConfig:
+    Type: AWS::Connect::InstanceStorageConfig
+    Condition: IsConnectAvailableInRegion
+    Properties:
+      InstanceArn: !GetAtt ConnectInstance.Arn
+      ResourceType: "AGENT_EVENTS"
+      StorageType: "KINESIS_STREAM"
+      KinesisStreamConfig:
+        StreamArn: !GetAtt AgentEventKinesisStream.Arn
