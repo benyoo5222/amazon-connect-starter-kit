@@ -51,7 +51,7 @@ You can use the `setenv.sh` file as a template to set the correct parameters for
 From the root of the project, run the following command:
 
 ```sh
-./packages/amazon-connect/scripts/sam/build-deploy.sh
+sh ./packages/amazon-connect/scripts/sam/build-deploy.sh
 ```
 
 This will both build and deploy the SAM template to AWS as a CloudFormation stack.
