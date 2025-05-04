@@ -4,7 +4,7 @@
 WORKSPACE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../../" && pwd)"
 echo "Workspace root: $WORKSPACE_ROOT"
 
-# Source the environment file using absolute path
+# environment variables file using absolute path
 . "$WORKSPACE_ROOT/packages/amazon-connect/scripts/sam/env.sh"
 
 # Set SAM command based on environment
@@ -55,5 +55,7 @@ $SAM_CMD deploy \
         IsAgentEventStreamServerSideEncryptionEnabled=$IsAgentEventStreamServerSideEncryptionEnabled \
         KinesisVideoStreamRetentionPeriod=$KinesisVideoStreamRetentionPeriod \
         KinesisVideoStreamPrefix=$KinesisVideoStreamPrefix \
+        ConnectVoiceIDDomainName=$ConnectVoiceIDDomainName \
     --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM \
+    $([ "$DEBUG_DEPLOYMENT" = "true" ] && echo "--debug") \
     --profile $PROFILE

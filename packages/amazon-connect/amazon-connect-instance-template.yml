@@ -138,6 +138,16 @@ Parameters:
     MinLength: 1
     MaxLength: 128
 
+  #########################
+  # Voice ID Configuration #
+  #########################
+  ConnectVoiceIDDomainName:
+    Type: String
+    Description: The name for the Voice ID Domain.
+    MinLength: 1
+    MaxLength: 256
+    AllowedPattern: ^[a-zA-Z0-9][a-zA-Z0-9_-]*$
+
 Mappings:
   ############################
   # Available Regions for AC #
@@ -286,7 +296,7 @@ Resources:
   ConnectKMSKey:
     Type: AWS::KMS::Key
     Condition: IsConnectAvailableInRegion
-    DeletionPolicy: Retain # Retain the key when the instance is deleted
+    DeletionPolicy: Retain # Retain the key when the stack is deleted
     UpdateReplacePolicy: Retain # Update fails even with this policy on KeyUsage, MultiRegion, KeySpec
     Properties:
       KeyUsage: ENCRYPT_DECRYPT
@@ -563,3 +573,18 @@ Resources:
                 Action:
                   - "connect:StartEmailContact"
                 Resource: "arn:aws:connect:*:*:instance/*"
+
+  ####################################
+  ####################################
+  ##                                ##
+  ##   AC Voice ID Configuration    ##
+  ##                                ##
+  ####################################
+  ####################################
+  ConnectVoiceIDDomain:
+    Type: AWS::VoiceID::Domain
+    Condition: IsConnectAvailableInRegion
+    Properties:
+      Name: !Ref ConnectVoiceIDDomainName
+      ServerSideEncryptionConfiguration:
+        KmsKeyId: !Ref ConnectKMSKey

@@ -22,6 +22,7 @@ This is a starter kit for building a contact center using Amazon Connect.
 
 > [!IMPORTANT]
 > Your aws user needs to have the `AmazonConnect_FullAccess` policy to create an Amazon Connect Instance.
+> To enable `Voice ID`, your aws user needs to have the `AmazonConnectVoiceIDFullAccess` policy.
 
 > [!IMPORTANT]
 > Please look at the [Configuration Parameters](#configuration-parameters) section to set the correct parameters for your deployment.
@@ -57,7 +58,21 @@ From the root of the project, run the following command:
 sh ./packages/amazon-connect/scripts/sam/build-deploy.sh
 ```
 
-This will both build and deploy the SAM template to AWS as a CloudFormation stack.
+## Deleting the SAM/CloudFormation stack
+
+> [!IMPORTANT]
+> This will not delete the following resources. Please delete them manually:
+>
+> - S3 bucket [ConnectStorageBucket]
+> - KMS key [ConnectKMSKey]
+
+From the root of the project, run the following command:
+
+```sh
+sh ./packages/amazon-connect/scripts/sam/delete-stack.sh
+```
+
+This will delete the SAM/CloudFormation stack.
 
 ## What gets created?
 
@@ -100,14 +115,20 @@ This will both build and deploy the SAM template to AWS as a CloudFormation stac
 - SES Role for Amazon Connect Email (Enables the use of Email)
   - Uses named IAM Role because the service role is used in all regions
   - But no domain set up
+- Voice ID Domain
+  - Encrypted by KMS Key created by this template
 
 ## Resources/Configurations not created using Cloudformation
 
 - Enabling next generation Connect [Manual]
+- Accepting BIPA Consent for Voice ID [Manual]
 - Enabling Attachments [API - AssociateInstanceStorageConfig]
 - Enabling exporting Screen recordings [API - AssociateInstanceStorageConfig]
 - Enabling exporting Contact Evaluations [API - AssociateInstanceStorageConfig]
 - Enabling exporting Email messages [API - AssociateInstanceStorageConfig]
+- Enable Outbound Campaigns V2 [API - StartInstanceOnboardingJob]
+- Enable Automated Interaction Logs [Not Supported & Not in Docs but uses UpdateInstanceAttribute API with AUTOMATED_INTERACTION_LOG type]
+- Integrating Domain with Voice ID [API - CreateIntegrationAssociation](Use the Domain created in the template)
 
 ## AWS CLI Configuration
 
@@ -202,11 +223,19 @@ The following parameters can be configured in `packages/amazon-connect/scripts/s
 | KinesisVideoStreamRetentionPeriod | The number of hours for the data records to be available in the Kinesis Video Stream. | 24            | Optional |
 | KinesisVideoStreamPrefix          | The prefix for the Kinesis Video Stream.                                              | --            | Required |
 
+### Connect Voice ID Configuration Parameters
+
+| Parameter                | Description                       | Default Value | Required |
+| ------------------------ | --------------------------------- | ------------- | -------- |
+| ConnectVoiceIDDomainName | The name for the Voice ID Domain. | --            | Required |
+
 ### CLI Specific Parameters
 
-| Parameter  | Description                             | Default Value | Required |
-| ---------- | --------------------------------------- | ------------- | -------- |
-| PROFILE    | AWS CLI profile name for authentication | --            | Required |
-| IS_GUIDED  | Whether to use guided deployment mode   | false         | Required |
-| STACK_NAME | Name of the CloudFormation stack        | --            | Required |
-| REGION     | AWS region for deployment               | --            | Required |
+| Parameter        | Description                                    | Default Value | Required |
+| ---------------- | ---------------------------------------------- | ------------- | -------- |
+| PROFILE          | AWS CLI profile name for authentication        | --            | Required |
+| IS_GUIDED        | Whether to use guided deployment mode          | false         | Required |
+| STACK_NAME       | Name of the CloudFormation stack               | --            | Required |
+| REGION           | AWS region for deployment                      | --            | Required |
+| DEBUG_DEPLOYMENT | Whether to enable debug logging for deployment | false         | Optional |
+| DEBUG_DELETE     | Whether to enable debug logging for deletion   | false         | Optional |
