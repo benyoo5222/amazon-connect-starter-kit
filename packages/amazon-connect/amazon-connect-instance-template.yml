@@ -273,10 +273,13 @@ Resources:
         # UseCustomTTSVoices: !Ref IsUseCustomTTSVoicesEnabled #
 
   ##############################################################
+  ##############################################################
   ##                                                          ##
   ##                AC DATA STORAGE/STREAMING                 ##
   ##                                                          ##
   ##############################################################
+  ##############################################################
+
   #####################################
   # AC Instance KMS Key Configuration #
   #####################################
@@ -429,10 +432,13 @@ Resources:
     UpdateReplacePolicy: Retain # Retain the bucket when the bucket needs to be replaced
 
   ####################################################
+  ####################################################
   ##                                                ##
   ##      AC DATA STORAGE/STREAMING INTEGRATION     ##
   ##                                                ##
   ####################################################
+  ####################################################
+
   ########################################
   # AC Instance Storage Configurations   #
   ########################################
@@ -525,3 +531,35 @@ Resources:
           KeyId: !GetAtt ConnectKMSKey.Arn
         RetentionPeriodHours: !Ref KinesisVideoStreamRetentionPeriod
         Prefix: !Ref KinesisVideoStreamPrefix
+
+  ####################################
+  ####################################
+  ##                                ##
+  ##      AC Email Configuration    ##
+  ##                                ##
+  ####################################
+  ####################################
+  AmazonConnectEmailSESAccessRole:
+    Type: AWS::IAM::Role
+    Condition: IsConnectAvailableInRegion
+    Properties:
+      RoleName: AmazonConnectEmailSESAccessRole
+      Description: Role for SES to access Amazon Connect
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "ses.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: AmazonConnectEmailSESAccessPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "connect:StartEmailContact"
+                Resource: "arn:aws:connect:*:*:instance/*"

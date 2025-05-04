@@ -66,8 +66,8 @@ This will both build and deploy the SAM template to AWS as a CloudFormation stac
 > Please check the Mapping section in the Template or go to the [Amazon Connect Regions](https://docs.aws.amazon.com/connect/latest/adminguide/regions.html) page to see which regions are supported.
 
 > [!IMPORTANT]
-> The Kinesis Video Stream is not supported in all Regions.
-> Kinesis Video Stream Integration is only created in Regions that support both Amazon Connect and Kinesis Video Streams.
+> Kinesis Video Stream is not supported in all Regions.
+> Kinesis Video Stream Integration (for Live Media Streaming) is only created in Regions that support both Amazon Connect and Kinesis Video Streams.
 > Please check the Mapping section in the Template or go to the [Amazon Kinesis Video Stream Regions](https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/availability.html) page to see which regions are supported.
 
 - Amazon Connect Instance
@@ -97,6 +97,17 @@ This will both build and deploy the SAM template to AWS as a CloudFormation stac
 - Kinesis Firehose for Amazon Connect Data (CR)
 - Kinesis Video Stream for Amazon Connect Data
   - Encrypted by KMS Key created by this template
+- SES Role for Amazon Connect Email (Enables the use of Email)
+  - Uses named IAM Role because the service role is used in all regions
+  - But no domain set up
+
+## Resources/Configurations not created using Cloudformation
+
+- Enabling next generation Connect [Manual]
+- Enabling Attachments [API - AssociateInstanceStorageConfig]
+- Enabling exporting Screen recordings [API - AssociateInstanceStorageConfig]
+- Enabling exporting Contact Evaluations [API - AssociateInstanceStorageConfig]
+- Enabling exporting Email messages [API - AssociateInstanceStorageConfig]
 
 ## AWS CLI Configuration
 

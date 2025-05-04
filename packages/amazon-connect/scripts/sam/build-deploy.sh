@@ -55,5 +55,5 @@ $SAM_CMD deploy \
         IsAgentEventStreamServerSideEncryptionEnabled=$IsAgentEventStreamServerSideEncryptionEnabled \
         KinesisVideoStreamRetentionPeriod=$KinesisVideoStreamRetentionPeriod \
         KinesisVideoStreamPrefix=$KinesisVideoStreamPrefix \
-    --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
+    --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM \
     --profile $PROFILE
