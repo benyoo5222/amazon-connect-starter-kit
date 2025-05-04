@@ -110,9 +110,6 @@ This will delete the SAM/CloudFormation stack.
 - Kinesis Firehose for Amazon Connect Data (CR)
 - Kinesis Video Stream for Amazon Connect Data
   - Encrypted by KMS Key created by this template
-- SES Role for Amazon Connect Email (Enables the use of Email)
-  - Uses named IAM Role because the service role is used in all regions
-  - But no domain set up
 - Voice ID Domain
   - Encrypted by KMS Key created by this template
 - Customer Profile Domain
@@ -127,7 +124,9 @@ This will delete the SAM/CloudFormation stack.
 - Enabling Attachments [API - AssociateInstanceStorageConfig]
 - Enabling exporting Screen recordings [API - AssociateInstanceStorageConfig]
 - Enabling exporting Contact Evaluations [API - AssociateInstanceStorageConfig]
+- Enabling Email by Service Role [Manual - It looks like the ARN format it's looking for is role/service-role/ which is only supported through the console]
 - Enabling exporting Email messages [API - AssociateInstanceStorageConfig]
+- Associating Email Domain with Connect Instance [API - CreateIntegrationAssociation + SES_IDENTITY]
 - Enable Outbound Campaigns V2 [API - StartInstanceOnboardingJob]
 - Enable Automated Interaction Logs [Not Supported & Not in Docs but uses UpdateInstanceAttribute API with AUTOMATED_INTERACTION_LOG type]
 - Integrating Domain with Voice ID [API - CreateIntegrationAssociation](Use the Domain created in the template)
