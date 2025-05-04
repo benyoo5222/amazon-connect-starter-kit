@@ -119,6 +119,7 @@ This will delete the SAM/CloudFormation stack.
   - Encrypted by KMS Key created by this template
 - Customer Profile Domain
   - Encrypted by KMS Key created by this template
+- Connect Q Assistant
 
 ## Resources/Configurations not created using Cloudformation
 
