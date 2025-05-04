@@ -236,6 +236,21 @@ The following parameters can be configured in `packages/amazon-connect/scripts/s
 | ------------------------ | --------------------------------- | ------------- | -------- |
 | ConnectVoiceIDDomainName | The name for the Voice ID Domain. | --            | Required |
 
+### Connect Customer Profile Configuration Parameters
+
+| Parameter                                                            | Description                                                                               | Default Value | Required |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ------------- | -------- |
+| UseDeadLetterQueueForCustomerProfile                                 | Whether to use a dead letter queue for the Customer Profile Queue.                        | true          | Optional |
+| ConnectCustomerProfileDeadLetterQueueMessageRetentionPeriodInSeconds | The number of seconds for the data records to be available in the Customer Profile Queue. | 345600        | Optional |
+| ConnectCustomerProfileDomainName                                     | The name for the Customer Profile Domain.                                                 | --            | Required |
+| ConnectCustomerProfileDataExpirationPeriodInDays                     | The number of days for the data records to be available in the Customer Profile Domain.   | --            | Required |
+
+### Connect Q Configuration Parameters
+
+| Parameter             | Description                           | Default Value | Required |
+| --------------------- | ------------------------------------- | ------------- | -------- |
+| ConnectQAssistantName | The name for the Connect Q Assistant. | --            | Required |
+
 ### CLI Specific Parameters
 
 | Parameter        | Description                                    | Default Value | Required |
