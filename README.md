@@ -61,6 +61,15 @@ This will both build and deploy the SAM template to AWS as a CloudFormation stac
 
 ## What gets created?
 
+> [!IMPORTANT]
+> Resources are only created in Regions that are supported by Amazon Connect.
+> Please check the Mapping section in the Template or go to the [Amazon Connect Regions](https://docs.aws.amazon.com/connect/latest/adminguide/regions.html) page to see which regions are supported.
+
+> [!IMPORTANT]
+> The Kinesis Video Stream is not supported in all Regions.
+> Kinesis Video Stream Integration is only created in Regions that support both Amazon Connect and Kinesis Video Streams.
+> Please check the Mapping section in the Template or go to the [Amazon Kinesis Video Stream Regions](https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/availability.html) page to see which regions are supported.
+
 - Amazon Connect Instance
   - Identity Management
   - Voice, Chat, and Tasks enabled
@@ -149,7 +158,7 @@ The following parameters can be configured in `packages/amazon-connect/scripts/s
 | ------------------------------ | --------------------------------------------------------------------------------------------------------------- | --------------- | -------- |
 | IdentityManagementType         | Specifies whether the instance uses Connect-managed or SAML-based identity management                           | CONNECT_MANAGED | Optional |
 | InstanceAliasName              | The alias for the Connect instance (must start with a letter/number, can contain letters, numbers, and hyphens) | --              | Required |
-| ENVIRONMENT                    | The deployment environment (e.g., dev, prod)                                                                    | --              | Required |
+| ENVIRONMENT                    | The deployment environment (e.g., dev, prod)                                                                    | dev             | Required |
 | IsAutoResolveBestVoicesEnabled | Enables automatic resolution of best voices for text-to-speech                                                  | true            | Optional |
 | IsContactflowLogsEnabled       | Enables logging for contact flows                                                                               | true            | Optional |
 | IsContactLensEnabled           | Enables Amazon Connect Contact Lens features                                                                    | true            | Optional |
