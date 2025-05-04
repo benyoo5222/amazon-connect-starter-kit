@@ -138,15 +138,54 @@ Parameters:
     MinLength: 1
     MaxLength: 128
 
-  #########################
+  ##########################
   # Voice ID Configuration #
-  #########################
+  ##########################
   ConnectVoiceIDDomainName:
     Type: String
     Description: The name for the Voice ID Domain.
     MinLength: 1
     MaxLength: 256
     AllowedPattern: ^[a-zA-Z0-9][a-zA-Z0-9_-]*$
+
+  ###########################
+  # Customer Profile Config #
+  ###########################
+  UseDeadLetterQueueForCustomerProfile:
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
+  ConnectCustomerProfileDeadLetterQueueMessageRetentionPeriodInSeconds:
+    Type: Number
+    Default: 345600 # 4 days
+    MinValue: 60 # 1 minute
+    MaxValue: 1209600 # 14 days
+    Description: The number of seconds that Amazon SQS retains a message.
+
+  ConnectCustomerProfileDomainName:
+    Type: String
+    Description: The name for the Customer Profile Domain.
+    MinLength: 1
+    MaxLength: 256
+    AllowedPattern: ^[a-zA-Z0-9][a-zA-Z0-9_-]*$
+
+  ConnectCustomerProfileDataExpirationPeriodInDays:
+    Type: Number
+    MinValue: 1
+    MaxValue: 1098
+    Description: The default number of days until the data within the domain expires.
+
+  ###########################
+  # Amazon Connect Q Config #
+  ###########################
+  ConnectQAssistantName:
+    Type: String
+    Description: The name for the Amazon Connect Q Assistant.
+    MinLength: 1
+    MaxLength: 255
 
 Mappings:
   ############################
@@ -217,6 +256,31 @@ Mappings:
     sa-east-1:
       isAvailable: true
 
+  ##########################################
+  # Available Regions for Customer Profile #
+  ##########################################
+  CustomerProfileRegions:
+    us-east-1:
+      isAvailable: true
+    us-west-2:
+      isAvailable: true
+    af-south-1:
+      isAvailable: true
+    ap-northeast-2:
+      isAvailable: true
+    ap-southeast-1:
+      isAvailable: true
+    ap-southeast-2:
+      isAvailable: true
+    ap-northeast-1:
+      isAvailable: true
+    ca-central-1:
+      isAvailable: true
+    eu-central-1:
+      isAvailable: true
+    eu-west-2:
+      isAvailable: true
+
 Conditions:
   ##########################################
   # Connect Instance Availabilty Condition #
@@ -250,6 +314,24 @@ Conditions:
         true,
       ],
     ]
+
+  #######################################
+  # Connect Customer Profile Conditions #
+  #######################################
+  IsBothCustomerProfileAndConnectAvailableInRegion:
+    !And [
+      !Equals [
+        !FindInMap [CustomerProfileRegions, !Ref "AWS::Region", isAvailable],
+        true,
+      ],
+      !Equals [
+        !FindInMap [AmazonConnectRegions, !Ref "AWS::Region", isAvailable],
+        true,
+      ],
+    ]
+
+  IsUsingDeadLetterQueueForCustomerProfile:
+    !Equals [!Ref UseDeadLetterQueueForCustomerProfile, true]
 
   ###########################################
   # Connect Features Availabilty Conditions #
@@ -586,5 +668,74 @@ Resources:
     Condition: IsConnectAvailableInRegion
     Properties:
       Name: !Ref ConnectVoiceIDDomainName
+      ServerSideEncryptionConfiguration:
+        KmsKeyId: !Ref ConnectKMSKey
+
+  ####################################
+  ####################################
+  ##                                ##
+  ##   AC Customer Profile Config   ##
+  ##                                ##
+  ####################################
+  ####################################
+  ConnectCustomerProfileDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Condition: IsBothCustomerProfileAndConnectAvailableInRegion
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      MessageRetentionPeriod: !Ref ConnectCustomerProfileDeadLetterQueueMessageRetentionPeriodInSeconds
+
+  ConnectCustomerProfileQueuePolicy:
+    Type: AWS::SQS::QueueInlinePolicy
+    Condition: IsBothCustomerProfileAndConnectAvailableInRegion
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: Allows any identity in the account to manage the queue
+            Effect: Allow
+            Principal:
+              AWS: !Sub ${AWS::AccountId}
+            Action:
+              - "sqs:*"
+            Resource:
+              - !GetAtt ConnectCustomerProfileDeadLetterQueue.Arn
+          - Sid: Allow Customer Profile to send messages to the queue
+            Effect: Allow
+            Principal:
+              Service:
+                - "profile.amazonaws.com"
+            Action:
+              - "sqs:SendMessage"
+            Resource:
+              - !GetAtt ConnectCustomerProfileDeadLetterQueue.Arn
+      Queue: !Ref ConnectCustomerProfileDeadLetterQueue
+
+  ConnectCustomerProfileDomain:
+    Type: AWS::CustomerProfiles::Domain
+    Condition: IsBothCustomerProfileAndConnectAvailableInRegion
+    Properties:
+      DomainName: !Ref ConnectCustomerProfileDomainName
+      DefaultExpirationDays: !Ref ConnectCustomerProfileDataExpirationPeriodInDays
+      DeadLetterQueueUrl: !If
+        - "IsUsingDeadLetterQueueForCustomerProfile"
+        - !Ref ConnectCustomerProfileDeadLetterQueue
+        - !Ref AWS::NoValue
+      DefaultEncryptionKey: !GetAtt ConnectKMSKey.Arn
+
+  ####################################
+  ####################################
+  ##                                ##
+  ##     Amazon Connect Q Config    ##
+  ##                                ##
+  ####################################
+  ####################################
+  ConnectQAssistant:
+    Type: AWS::Wisdom::Assistant
+    Condition: IsConnectAvailableInRegion
+    Properties:
+      Name: !Ref ConnectQAssistantName
+      Type: AGENT
       ServerSideEncryptionConfiguration:
         KmsKeyId: !Ref ConnectKMSKey

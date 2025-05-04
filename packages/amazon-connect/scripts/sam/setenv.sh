@@ -39,6 +39,19 @@ KinesisVideoStreamPrefix=customer-audio
 ConnectVoiceIDDomainName=amazon-connect-starter-kit-callers
 
 ########################################################
+# Customer Profile Configuration Parameters
+########################################################
+UseDeadLetterQueueForCustomerProfile=true # When true, the dead letter queue is used for the customer profile
+ConnectCustomerProfileDeadLetterQueueMessageRetentionPeriodInSeconds=345600 # 4 days (1 minute to 14 days)
+ConnectCustomerProfileDomainName=amazon-connect-starter-kit-customers
+ConnectCustomerProfileDataExpirationPeriodInDays=365 # 1 year (1 day to 1098 days)
+
+########################################################
+# Amazon Connect Q Configuration Parameters
+########################################################
+ConnectQAssistantName=amazon-connect-starter-kit-assistant
+
+########################################################
 # CLI Specific Parameters
 ########################################################
 PROFILE=default # Change this to your profile name (SSO)

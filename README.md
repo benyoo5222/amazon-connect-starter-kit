@@ -117,6 +117,8 @@ This will delete the SAM/CloudFormation stack.
   - But no domain set up
 - Voice ID Domain
   - Encrypted by KMS Key created by this template
+- Customer Profile Domain
+  - Encrypted by KMS Key created by this template
 
 ## Resources/Configurations not created using Cloudformation
 
@@ -129,6 +131,11 @@ This will delete the SAM/CloudFormation stack.
 - Enable Outbound Campaigns V2 [API - StartInstanceOnboardingJob]
 - Enable Automated Interaction Logs [Not Supported & Not in Docs but uses UpdateInstanceAttribute API with AUTOMATED_INTERACTION_LOG type]
 - Integrating Domain with Voice ID [API - CreateIntegrationAssociation](Use the Domain created in the template)
+- Enabling forecasting, capacity planning, and scheduling [Not Supported & Not in Docs but uses UpdateInstanceAttribute API with FORECASTING_PLANNING_SCHEDULING type]
+- Associating Customer Profile Domain with Connect Instance [Manual - `It is not possible to associate a Customer Profiles domain with an Amazon Connect Instance directly from the API. If you would like to create a domain and associate a Customer Profiles domain, use the Amazon Connect admin website.`](https://docs.aws.amazon.com/connect/latest/APIReference/API_connect-customer-profiles_CreateDomain.html)
+- Integrating with Amazon Connect Q Assistant (Wisdom) with Amazon Connect Instant [API - CreateIntegrationAssociation]
+- Creating Amazon Connect Case Domain [API - CreateDomain]
+- Associating Case Domain with Connect Instance [API - CreateIntegrationAssociation]
 
 ## AWS CLI Configuration
 
