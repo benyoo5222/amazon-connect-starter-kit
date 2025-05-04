@@ -18,7 +18,7 @@ This is a starter kit for building a contact center using Amazon Connect.
 - LocalStack AWS CLI installed - venv
 - LocalStack SAM CLI installed - venv
 
-## Creating an Amazon Connect + Related Resources (SAM)
+## Deploying the CloudFormation stack to AWS
 
 > [!IMPORTANT]
 > Your aws user needs to have the `AmazonConnect_FullAccess` policy to create an Amazon Connect Instance.
@@ -46,8 +46,6 @@ This is a starter kit for building a contact center using Amazon Connect.
 > This only supports `CONNECT_MANAGED` or `SAML` for Identity Management Type.
 > It does not support `Existing Directory`.
 
-### Deploying to AWS
-
 First, create an `env.sh` file in the `packages/amazon-connect/scripts/sam` directory.
 
 You can use the `setenv.sh` file as a template to set the correct parameters for your deployment.
@@ -58,7 +56,7 @@ From the root of the project, run the following command:
 sh ./packages/amazon-connect/scripts/sam/build-deploy.sh
 ```
 
-## Deleting the SAM/CloudFormation stack
+## Deleting the CloudFormation stack
 
 > [!IMPORTANT]
 > This will not delete the following resources. Please delete them manually:
@@ -77,13 +75,13 @@ This will delete the SAM/CloudFormation stack.
 ## What gets created?
 
 > [!IMPORTANT]
-> Resources are only created in Regions that are supported by Amazon Connect.
-> Please check the Mapping section in the Template or go to the [Amazon Connect Regions](https://docs.aws.amazon.com/connect/latest/adminguide/regions.html) page to see which regions are supported.
+> Resources are only created in Regions that support Amazon Connect.
+> Please check the Mapping section in the Template or go to the [Amazon Connect Regions](https://docs.aws.amazon.com/connect/latest/adminguide/regions.html) page to see which regions support it.
 
 > [!IMPORTANT]
 > Kinesis Video Stream is not supported in all Regions.
 > Kinesis Video Stream Integration (for Live Media Streaming) is only created in Regions that support both Amazon Connect and Kinesis Video Streams.
-> Please check the Mapping section in the Template or go to the [Amazon Kinesis Video Stream Regions](https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/availability.html) page to see which regions are supported.
+> Please check the Mapping section in the Template or go to the [Amazon Kinesis Video Stream Regions](https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/availability.html) page to see which regions support it.
 
 - Amazon Connect Instance
   - Identity Management
@@ -120,6 +118,7 @@ This will delete the SAM/CloudFormation stack.
 - Customer Profile Domain
   - Encrypted by KMS Key created by this template
 - Connect Q Assistant
+  - Encrypted by KMS Key created by this template
 
 ## Resources/Configurations not created using Cloudformation
 
