@@ -122,6 +122,22 @@ Parameters:
       - true
       - false
 
+  #########################
+  # Kinesis Video Streams #
+  #########################
+  KinesisVideoStreamRetentionPeriod:
+    Type: Number
+    Description: The number of hours for the data records to be available in the Kinesis Video Stream.
+    Default: 4
+    MinValue: 0
+    MaxValue: 87600 # 10 years
+
+  KinesisVideoStreamPrefix:
+    Type: String
+    Description: The prefix for the Kinesis Video Stream. Example <prefix>-connect-<instance alias name>-connect-[KVS creates the rest]
+    MinLength: 1
+    MaxLength: 128
+
 Mappings:
   ############################
   # Available Regions for AC #
@@ -150,6 +166,47 @@ Mappings:
     us-gov-west-1:
       isAvailable: true
 
+  ##############################################
+  # Available Regions for Kinesis Video Stream #
+  ##############################################
+  KinesisVideoStreamRegions:
+    us-east-2:
+      isAvailable: true
+    us-east-1:
+      isAvailable: true
+    us-west-2:
+      isAvailable: true
+    us-gov-east-1:
+      isAvailable: true
+    us-gov-west-1:
+      isAvailable: true
+    af-south-1:
+      isAvailable: true
+    ap-east-1:
+      isAvailable: true
+    ap-northeast-2:
+      isAvailable: true
+    ap-southeast-1:
+      isAvailable: true
+    ap-southeast-2:
+      isAvailable: true
+    ap-northeast-1:
+      isAvailable: true
+    ca-central-1:
+      isAvailable: true
+    cn-north-1:
+      isAvailable: true
+    eu-central-1:
+      isAvailable: true
+    eu-west-1:
+      isAvailable: true
+    eu-west-2:
+      isAvailable: true
+    eu-west-3:
+      isAvailable: true
+    sa-east-1:
+      isAvailable: true
+
 Conditions:
   ##########################################
   # Connect Instance Availabilty Condition #
@@ -168,6 +225,21 @@ Conditions:
 
   EnableAgentEventStreamServerSideEncryption:
     !Equals [!Ref IsAgentEventStreamServerSideEncryptionEnabled, true]
+
+  #########################################################
+  # Kinesis Video Stream and Connect Instance Availabilty #
+  #########################################################
+  IsBothKinesisVideoStreamAndConnectAvailableInRegion:
+    !And [
+      !Equals [
+        !FindInMap [KinesisVideoStreamRegions, !Ref "AWS::Region", isAvailable],
+        true,
+      ],
+      !Equals [
+        !FindInMap [AmazonConnectRegions, !Ref "AWS::Region", isAvailable],
+        true,
+      ],
+    ]
 
   ###########################################
   # Connect Features Availabilty Conditions #
@@ -356,6 +428,11 @@ Resources:
     DeletionPolicy: Retain # Retain the bucket when the instance is deleted
     UpdateReplacePolicy: Retain # Retain the bucket when the bucket needs to be replaced
 
+  ####################################################
+  ##                                                ##
+  ##      AC DATA STORAGE/STREAMING INTEGRATION     ##
+  ##                                                ##
+  ####################################################
   ########################################
   # AC Instance Storage Configurations   #
   ########################################
@@ -401,9 +478,9 @@ Resources:
           EncryptionType: KMS
           KeyId: !GetAtt ConnectKMSKey.Arn
 
-  #######################################
-  # AC Instance Stream Configurations   #
-  #######################################
+  #####################################
+  # AC Instance Stream Configurations #
+  #####################################
   ConnectCRStreamConfig:
     Type: AWS::Connect::InstanceStorageConfig
     Condition: IsConnectAvailableInRegion
@@ -431,3 +508,20 @@ Resources:
       StorageType: "KINESIS_STREAM"
       KinesisStreamConfig:
         StreamArn: !GetAtt AgentEventKinesisStream.Arn
+
+  ########################################################
+  # AC Instance Kinesis Video Stream Configuration (KVS) #
+  ########################################################
+  ConnectKinesisVideoStream:
+    Type: AWS::Connect::InstanceStorageConfig
+    Condition: IsBothKinesisVideoStreamAndConnectAvailableInRegion
+    Properties:
+      InstanceArn: !GetAtt ConnectInstance.Arn
+      ResourceType: MEDIA_STREAMS
+      StorageType: KINESIS_VIDEO_STREAM
+      KinesisVideoStreamConfig:
+        EncryptionConfig:
+          EncryptionType: KMS
+          KeyId: !GetAtt ConnectKMSKey.Arn
+        RetentionPeriodHours: !Ref KinesisVideoStreamRetentionPeriod
+        Prefix: !Ref KinesisVideoStreamPrefix

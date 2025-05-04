@@ -28,6 +28,12 @@ AgentEventStreamRetentionPeriod=24
 IsAgentEventStreamServerSideEncryptionEnabled=true
 
 ########################################################
+# Connect Kinesis Video Stream Configuration Parameters
+########################################################
+KinesisVideoStreamRetentionPeriod=4 # 0 [No retention] to 87600 [10 years]
+KinesisVideoStreamPrefix=customer-audio
+
+########################################################
 # CLI Specific Parameters
 ########################################################
 PROFILE=default # Change this to your profile name (SSO)

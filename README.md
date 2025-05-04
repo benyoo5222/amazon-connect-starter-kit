@@ -36,6 +36,9 @@ This is a starter kit for building a contact center using Amazon Connect.
 > The `UseCustomTTSVoices` attribute is only for customers who are on the allowed list. Please contact AWS to get access.
 
 > [!NOTE]
+> As of 05-25, using Kinesis Firehose as Data Streaming source is not supported through CloudFormation. Use Kinesis Stream instead.
+
+> [!NOTE]
 > Creating an Amazon Connect Instance is only supported on AWS; LocalStack does not support it yet.
 
 > [!NOTE]
@@ -74,11 +77,17 @@ This will both build and deploy the SAM template to AWS as a CloudFormation stac
 - S3 Bucket for Amazon Connect Data Storage
 - KMS Key for Amazon Connect Data (Encryption and Decryption)
 - KMS Key Alias (`alias/{Your Stack Name}/connect/{Environment}`)
-- IAM Role for any identity in the account to use the KMS Key
 - Amazon Connect Instance Storage Configurations
-  - Call Recordings (Encrypted with KMS Key created by this template)
-  - Chat Transcripts (Encrypted with KMS Key created by this template)
-  - Scheduled Reports (Encrypted with KMS Key created by this template)
+  - Call Recordings
+    - Encrypted with KMS Key created by this template
+  - Chat Transcripts
+    - Encrypted with KMS Key created by this template
+  - Scheduled Reports
+    - Encrypted with KMS Key created by this template
+- Kinesis Stream for Amazon Connect Data (CR and Agent Event)
+- Kinesis Firehose for Amazon Connect Data (CR)
+- Kinesis Video Stream for Amazon Connect Data
+  - Encrypted by KMS Key created by this template
 
 ## AWS CLI Configuration
 
@@ -156,6 +165,22 @@ The following parameters can be configured in `packages/amazon-connect/scripts/s
 | CallRecordingsS3BucketPrefix   | Prefix for the S3 bucket storing call recordings   | CallRecordings  | Optional |
 | ChatTranscriptsS3BucketPrefix  | Prefix for the S3 bucket storing chat transcripts  | ChatTranscripts | Optional |
 | ScheduledReportsS3BucketPrefix | Prefix for the S3 bucket storing scheduled reports | Reports         | Optional |
+
+### Connect Kinesis Stream Configuration Parameters
+
+| Parameter                                     | Description                                                                         | Default Value | Required |
+| --------------------------------------------- | ----------------------------------------------------------------------------------- | ------------- | -------- |
+| CRStreamRetentionPeriod                       | The number of hours for the data records to be available in the CR stream.          | 24            | Optional |
+| AgentEventStreamRetentionPeriod               | The number of hours for the data records to be available in the Agent Event stream. | 24            | Optional |
+| IsCRStreamServerSideEncryptionEnabled         | Whether to enable server-side encryption for the CR stream.                         | true          | Optional |
+| IsAgentEventStreamServerSideEncryptionEnabled | Whether to enable server-side encryption for the Agent Event stream.                | true          | Optional |
+
+### Connect Kinesis Video Stream Configuration Parameters
+
+| Parameter                         | Description                                                                           | Default Value | Required |
+| --------------------------------- | ------------------------------------------------------------------------------------- | ------------- | -------- |
+| KinesisVideoStreamRetentionPeriod | The number of hours for the data records to be available in the Kinesis Video Stream. | 24            | Optional |
+| KinesisVideoStreamPrefix          | The prefix for the Kinesis Video Stream.                                              | --            | Required |
 
 ### CLI Specific Parameters
 

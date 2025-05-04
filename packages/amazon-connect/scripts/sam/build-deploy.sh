@@ -46,5 +46,14 @@ $SAM_CMD deploy \
         IsOutboundCallsEnabled=$IsOutboundCallsEnabled \
         IsUseCustomTTSVoicesEnabled=$IsUseCustomTTSVoicesEnabled \
         Environment=$ENVIRONMENT \
+        CallRecordingsS3BucketPrefix=$CallRecordingsS3BucketPrefix \
+        ChatTranscriptsS3BucketPrefix=$ChatTranscriptsS3BucketPrefix \
+        ScheduledReportsS3BucketPrefix=$ScheduledReportsS3BucketPrefix \
+        CRStreamRetentionPeriod=$CRStreamRetentionPeriod \
+        IsCRStreamServerSideEncryptionEnabled=$IsCRStreamServerSideEncryptionEnabled \
+        AgentEventStreamRetentionPeriod=$AgentEventStreamRetentionPeriod \
+        IsAgentEventStreamServerSideEncryptionEnabled=$IsAgentEventStreamServerSideEncryptionEnabled \
+        KinesisVideoStreamRetentionPeriod=$KinesisVideoStreamRetentionPeriod \
+        KinesisVideoStreamPrefix=$KinesisVideoStreamPrefix \
     --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
     --profile $PROFILE
