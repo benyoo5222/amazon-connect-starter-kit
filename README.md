@@ -135,6 +135,7 @@ This will delete the SAM/CloudFormation stack.
 - Integrating with Amazon Connect Q Assistant (Wisdom) with Amazon Connect Instant [API - CreateIntegrationAssociation]
 - Creating Amazon Connect Case Domain [API - CreateDomain]
 - Associating Case Domain with Connect Instance [API - CreateIntegrationAssociation]
+- Associating Customer Authentication [API - CreateIntegrationAssociation + COGNITO_USER_POOL]
 
 ## AWS CLI Configuration
 
