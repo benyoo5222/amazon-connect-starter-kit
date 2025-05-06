@@ -61,6 +61,8 @@ $SAM_CMD deploy \
         ConnectCustomerProfileDomainName=$ConnectCustomerProfileDomainName \
         ConnectCustomerProfileDataExpirationPeriodInDays=$ConnectCustomerProfileDataExpirationPeriodInDays \
         ConnectQAssistantName=$ConnectQAssistantName \
+        CognitoUserPoolTier=$CognitoUserPoolTier \
+        CognitoUserPoolDeletionProtection=$CognitoUserPoolDeletionProtection \
     --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM \
     $([ "$DEBUG_DEPLOYMENT" = "true" ] && echo "--debug") \
     --profile $PROFILE

@@ -79,13 +79,34 @@ Parameters:
   ##########################
   # Storage Configuration #
   ##########################
+  EnableCallRecordingsStorage:
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
   ConnectCallRecordingsS3Prefix:
     Type: String
     Default: CallRecordings
 
+  EnableChatTranscriptsStorage:
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
   ConnectChatTranscriptsS3Prefix:
     Type: String
     Default: ChatTranscripts
+
+  EnableScheduledReportsStorage:
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
 
   ConnectScheduledReportsS3Prefix:
     Type: String
@@ -94,6 +115,13 @@ Parameters:
   #########################
   # Kinesis Configuration #
   #########################
+  EnableContactRecordsStream:
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
   CRStreamRetentionPeriod:
     Type: Number
     Description: The number of hours for the data records to be available in the CR stream.
@@ -102,6 +130,13 @@ Parameters:
     MaxValue: 8760 # 365 days
 
   IsCRStreamServerSideEncryptionEnabled:
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
+  EnableAgentEventStream:
     Type: String
     Default: true
     AllowedValues:
@@ -125,6 +160,13 @@ Parameters:
   #########################
   # Kinesis Video Streams #
   #########################
+  EnableKinesisVideoStream:
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
   KinesisVideoStreamRetentionPeriod:
     Type: Number
     Description: The number of hours for the data records to be available in the Kinesis Video Stream.
@@ -141,6 +183,13 @@ Parameters:
   ##########################
   # Voice ID Configuration #
   ##########################
+  EnableVoiceID:
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
   ConnectVoiceIDDomainName:
     Type: String
     Description: The name for the Voice ID Domain.
@@ -151,6 +200,13 @@ Parameters:
   ###########################
   # Customer Profile Config #
   ###########################
+  EnableCustomerProfile:
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
   UseDeadLetterQueueForCustomerProfile:
     Type: String
     Default: true
@@ -181,11 +237,43 @@ Parameters:
   ###########################
   # Amazon Connect Q Config #
   ###########################
+  EnableConnectQ:
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
   ConnectQAssistantName:
     Type: String
     Description: The name for the Amazon Connect Q Assistant.
     MinLength: 1
     MaxLength: 255
+
+  ##########################################
+  # Amazon Connect Customer Auth (Cognito) #
+  ##########################################
+  EnableCustomerAuth:
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
+  CognitoUserPoolDeletionProtection:
+    Type: String
+    Default: ACTIVE
+    AllowedValues:
+      - ACTIVE
+      - INACTIVE
+
+  CognitoUserPoolTier:
+    Type: String
+    Default: ESSENTIALS
+    AllowedValues:
+      - LITE
+      - ESSENTIALS
+      - PLUS
 
 Mappings:
   ############################
@@ -256,6 +344,27 @@ Mappings:
     sa-east-1:
       isAvailable: true
 
+  ##################################
+  # Available Regions for Voice ID #
+  ##################################
+  VoiceIDRegions:
+    us-east-1:
+      isAvailable: true
+    us-west-2:
+      isAvailable: true
+    ap-southeast-1:
+      isAvailable: true
+    ap-southeast-2:
+      isAvailable: true
+    ap-northeast-1:
+      isAvailable: true
+    ca-central-1:
+      isAvailable: true
+    eu-central-1:
+      isAvailable: true
+    eu-west-2:
+      isAvailable: true
+
   ##########################################
   # Available Regions for Customer Profile #
   ##########################################
@@ -281,6 +390,54 @@ Mappings:
     eu-west-2:
       isAvailable: true
 
+  ###################################
+  # Available Regions for Connect Q #
+  ###################################
+  ConnectQRegions:
+    us-east-1:
+      isAvailable: true
+    us-west-2:
+      isAvailable: true
+    ap-northeast-2:
+      isAvailable: true
+    ap-southeast-1:
+      isAvailable: true
+    ap-southeast-2:
+      isAvailable: true
+    ap-northeast-1:
+      isAvailable: true
+    ca-central-1:
+      isAvailable: true
+    eu-central-1:
+      isAvailable: true
+    eu-west-2:
+      isAvailable: true
+
+  #######################################
+  # Available Regions for Customer Auth #
+  #######################################
+  CustomerAuthRegions:
+    us-east-1:
+      isAvailable: true
+    us-west-2:
+      isAvailable: true
+    af-south-1:
+      isAvailable: true
+    ap-northeast-2:
+      isAvailable: true
+    ap-southeast-1:
+      isAvailable: true
+    ap-southeast-2:
+      isAvailable: true
+    ap-northeast-1:
+      isAvailable: true
+    ca-central-1:
+      isAvailable: true
+    eu-west-1:
+      isAvailable: true
+    eu-west-2:
+      isAvailable: true
+
 Conditions:
   ##########################################
   # Connect Instance Availabilty Condition #
@@ -291,11 +448,59 @@ Conditions:
       true,
     ]
 
+  ##########################################
+  # Connect Storage Configuration Conditions #
+  ##########################################
+  IsCallRecordingsStorageEnabledAndConnectAvailableInRegion:
+    !And [
+      !Equals [!Ref EnableCallRecordingsStorage, true],
+      !Equals [
+        !FindInMap [AmazonConnectRegions, !Ref "AWS::Region", isAvailable],
+        true,
+      ],
+    ]
+
+  IsChatTranscriptsStorageEnabledAndConnectAvailableInRegion:
+    !And [
+      !Equals [!Ref EnableChatTranscriptsStorage, true],
+      !Equals [
+        !FindInMap [AmazonConnectRegions, !Ref "AWS::Region", isAvailable],
+        true,
+      ],
+    ]
+
+  IsScheduledReportsStorageEnabledAndConnectAvailableInRegion:
+    !And [
+      !Equals [!Ref EnableScheduledReportsStorage, true],
+      !Equals [
+        !FindInMap [AmazonConnectRegions, !Ref "AWS::Region", isAvailable],
+        true,
+      ],
+    ]
+
   #####################################
   # Connect Kinesis Stream Conditions #
   #####################################
+  IsContactRecordsStreamEnabledAndConnectAvailableInRegion:
+    !And [
+      !Equals [!Ref EnableContactRecordsStream, true],
+      !Equals [
+        !FindInMap [AmazonConnectRegions, !Ref "AWS::Region", isAvailable],
+        true,
+      ],
+    ]
+
   EnableCRStreamServerSideEncryption:
     !Equals [!Ref IsCRStreamServerSideEncryptionEnabled, true]
+
+  IsAgentEventStreamEnabledAndConnectAvailableInRegion:
+    !And [
+      !Equals [!Ref EnableAgentEventStream, true],
+      !Equals [
+        !FindInMap [AmazonConnectRegions, !Ref "AWS::Region", isAvailable],
+        true,
+      ],
+    ]
 
   EnableAgentEventStreamServerSideEncryption:
     !Equals [!Ref IsAgentEventStreamServerSideEncryptionEnabled, true]
@@ -303,10 +508,27 @@ Conditions:
   #########################################################
   # Kinesis Video Stream and Connect Instance Availabilty #
   #########################################################
-  IsBothKinesisVideoStreamAndConnectAvailableInRegion:
+  IsKinesisVideoStreamEnabledAndBothACAndKVSAvailableInRegion:
     !And [
+      !Equals [!Ref EnableKinesisVideoStream, true],
       !Equals [
         !FindInMap [KinesisVideoStreamRegions, !Ref "AWS::Region", isAvailable],
+        true,
+      ],
+      !Equals [
+        !FindInMap [AmazonConnectRegions, !Ref "AWS::Region", isAvailable],
+        true,
+      ],
+    ]
+
+  ###############################
+  # Connect Voice ID Conditions #
+  ###############################
+  IsVoiceIDEnabledAndBothACAndVoiceIDAvailableInRegion:
+    !And [
+      !Equals [!Ref EnableVoiceID, true],
+      !Equals [
+        !FindInMap [VoiceIDRegions, !Ref "AWS::Region", isAvailable],
         true,
       ],
       !Equals [
@@ -318,7 +540,7 @@ Conditions:
   #######################################
   # Connect Customer Profile Conditions #
   #######################################
-  IsBothCustomerProfileAndConnectAvailableInRegion:
+  IsCustomerProfileEnabledAndBothACAndCustomerProfileAvailableInRegion:
     !And [
       !Equals [
         !FindInMap [CustomerProfileRegions, !Ref "AWS::Region", isAvailable],
@@ -328,14 +550,43 @@ Conditions:
         !FindInMap [AmazonConnectRegions, !Ref "AWS::Region", isAvailable],
         true,
       ],
+      !Equals [!Ref EnableCustomerProfile, true],
     ]
 
   IsUsingDeadLetterQueueForCustomerProfile:
     !Equals [!Ref UseDeadLetterQueueForCustomerProfile, true]
 
-  ###########################################
-  # Connect Features Availabilty Conditions #
-  ###########################################
+  ####################################
+  # Connect Q Conditions             #
+  ####################################
+  IsConnectQEnabledAndBothACAndConnectQAvailableInRegion:
+    !And [
+      !Equals [!Ref EnableConnectQ, true],
+      !Equals [
+        !FindInMap [ConnectQRegions, !Ref "AWS::Region", isAvailable],
+        true,
+      ],
+      !Equals [
+        !FindInMap [AmazonConnectRegions, !Ref "AWS::Region", isAvailable],
+        true,
+      ],
+    ]
+
+  ####################################
+  # Connect Customer Auth Conditions #
+  ####################################
+  IsCustomerAuthEnabledAndBothACAndCustomerAuthAvailableInRegion:
+    !And [
+      !Equals [
+        !FindInMap [CustomerAuthRegions, !Ref "AWS::Region", isAvailable],
+        true,
+      ],
+      !Equals [
+        !FindInMap [AmazonConnectRegions, !Ref "AWS::Region", isAvailable],
+        true,
+      ],
+      !Equals [!Ref EnableCustomerAuth, true],
+    ]
 
 Resources:
   ###############################################################
@@ -421,7 +672,7 @@ Resources:
   ###################################
   CRKinesisStream:
     Type: AWS::Kinesis::Stream
-    Condition: IsConnectAvailableInRegion
+    Condition: IsContactRecordsStreamEnabledAndConnectAvailableInRegion
     DeletionPolicy: Delete # Delete the stream when the instance is deleted
     # Deleting the stream if update requires a replacement
     #  Since data will most likely be stored in S3, this shouldn't be an issue
@@ -438,7 +689,7 @@ Resources:
 
   AgentEventKinesisStream:
     Type: AWS::Kinesis::Stream
-    Condition: IsConnectAvailableInRegion
+    Condition: IsAgentEventStreamEnabledAndConnectAvailableInRegion
     DeletionPolicy: Delete # Delete the stream when the instance is deleted
     # Deleting the stream if update requires a replacement
     #  Since data will most likely be stored in S3, this shouldn't be an issue
@@ -459,7 +710,7 @@ Resources:
   #######################################
   ACKinesisFirehoseServiceRole:
     Type: AWS::IAM::Role
-    Condition: IsConnectAvailableInRegion
+    Condition: IsContactRecordsStreamEnabledAndConnectAvailableInRegion
     Properties:
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -503,7 +754,7 @@ Resources:
 
   CRKinesisFirehose:
     Type: AWS::KinesisFirehose::DeliveryStream
-    Condition: IsConnectAvailableInRegion
+    Condition: IsContactRecordsStreamEnabledAndConnectAvailableInRegion
     Properties:
       DeliveryStreamType: KinesisStreamAsSource
       KinesisStreamSourceConfiguration:
@@ -536,7 +787,7 @@ Resources:
   ########################################
   ConnectCallRecordingsStorageConfig:
     Type: AWS::Connect::InstanceStorageConfig
-    Condition: IsConnectAvailableInRegion
+    Condition: IsCallRecordingsStorageEnabledAndConnectAvailableInRegion
     Properties:
       InstanceArn: !GetAtt ConnectInstance.Arn
       ResourceType: CALL_RECORDINGS
@@ -550,7 +801,7 @@ Resources:
 
   ConnectChatTranscriptsStorageConfig:
     Type: AWS::Connect::InstanceStorageConfig
-    Condition: IsConnectAvailableInRegion
+    Condition: IsChatTranscriptsStorageEnabledAndConnectAvailableInRegion
     Properties:
       InstanceArn: !GetAtt ConnectInstance.Arn
       ResourceType: CHAT_TRANSCRIPTS
@@ -564,7 +815,7 @@ Resources:
 
   ConnectScheduledReportsStorageConfig:
     Type: AWS::Connect::InstanceStorageConfig
-    Condition: IsConnectAvailableInRegion
+    Condition: IsScheduledReportsStorageEnabledAndConnectAvailableInRegion
     Properties:
       InstanceArn: !GetAtt ConnectInstance.Arn
       ResourceType: SCHEDULED_REPORTS
@@ -581,7 +832,7 @@ Resources:
   #####################################
   ConnectCRStreamConfig:
     Type: AWS::Connect::InstanceStorageConfig
-    Condition: IsConnectAvailableInRegion
+    Condition: IsContactRecordsStreamEnabledAndConnectAvailableInRegion
     Properties:
       InstanceArn: !GetAtt ConnectInstance.Arn
       ResourceType: "CONTACT_TRACE_RECORDS"
@@ -599,7 +850,7 @@ Resources:
 
   ConnectAgentEventStreamConfig:
     Type: AWS::Connect::InstanceStorageConfig
-    Condition: IsConnectAvailableInRegion
+    Condition: IsAgentEventStreamEnabledAndConnectAvailableInRegion
     Properties:
       InstanceArn: !GetAtt ConnectInstance.Arn
       ResourceType: "AGENT_EVENTS"
@@ -612,7 +863,7 @@ Resources:
   ########################################################
   ConnectKinesisVideoStream:
     Type: AWS::Connect::InstanceStorageConfig
-    Condition: IsBothKinesisVideoStreamAndConnectAvailableInRegion
+    Condition: IsKinesisVideoStreamEnabledAndBothACAndKVSAvailableInRegion
     Properties:
       InstanceArn: !GetAtt ConnectInstance.Arn
       ResourceType: MEDIA_STREAMS
@@ -633,7 +884,7 @@ Resources:
   ####################################
   ConnectVoiceIDDomain:
     Type: AWS::VoiceID::Domain
-    Condition: IsConnectAvailableInRegion
+    Condition: IsVoiceIDEnabledAndBothACAndVoiceIDAvailableInRegion
     Properties:
       Name: !Ref ConnectVoiceIDDomainName
       ServerSideEncryptionConfiguration:
@@ -648,7 +899,7 @@ Resources:
   ####################################
   ConnectCustomerProfileDeadLetterQueue:
     Type: AWS::SQS::Queue
-    Condition: IsBothCustomerProfileAndConnectAvailableInRegion
+    Condition: IsCustomerProfileEnabledAndBothACAndCustomerProfileAvailableInRegion
     DeletionPolicy: Delete
     UpdateReplacePolicy: Delete
     Properties:
@@ -656,7 +907,7 @@ Resources:
 
   ConnectCustomerProfileQueuePolicy:
     Type: AWS::SQS::QueueInlinePolicy
-    Condition: IsBothCustomerProfileAndConnectAvailableInRegion
+    Condition: IsCustomerProfileEnabledAndBothACAndCustomerProfileAvailableInRegion
     Properties:
       PolicyDocument:
         Version: "2012-10-17"
@@ -682,7 +933,7 @@ Resources:
 
   ConnectCustomerProfileDomain:
     Type: AWS::CustomerProfiles::Domain
-    Condition: IsBothCustomerProfileAndConnectAvailableInRegion
+    Condition: IsCustomerProfileEnabledAndBothACAndCustomerProfileAvailableInRegion
     Properties:
       DomainName: !Ref ConnectCustomerProfileDomainName
       DefaultExpirationDays: !Ref ConnectCustomerProfileDataExpirationPeriodInDays
@@ -701,9 +952,41 @@ Resources:
   ####################################
   ConnectQAssistant:
     Type: AWS::Wisdom::Assistant
-    Condition: IsConnectAvailableInRegion
+    Condition: IsConnectQEnabledAndBothACAndConnectQAvailableInRegion
     Properties:
       Name: !Ref ConnectQAssistantName
       Type: AGENT
       ServerSideEncryptionConfiguration:
         KmsKeyId: !Ref ConnectKMSKey
+
+  ####################################
+  ####################################
+  ##                                ##
+  ##  Amazon Connect Customer Auth  ##
+  ##  (Purely Skeleton)             ##
+  ##                                ##
+  ####################################
+  ####################################
+
+  ###########################################
+  # Please change for your own use case     #
+  # Does not include SAML/IDP for user pool #
+  ###########################################
+  ConnectCognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Condition: IsCustomerAuthEnabledAndBothACAndCustomerAuthAvailableInRegion
+    DeletionPolicy: Retain # Retain the user pool when the Stack/Resource is deleted
+    UpdateReplacePolicy: Retain # Retain the user pool when the Stack/Resource is updated
+    Properties:
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false # Allow users to sign up themselves
+      DeletionProtection: !Ref CognitoUserPoolDeletionProtection
+      MfaConfiguration: "OFF" # OPTIONAL, OFF, ON (Please change for your own use case)
+      UserPoolTier: !Ref CognitoUserPoolTier
+
+  ConnectCognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Condition: IsCustomerAuthEnabledAndBothACAndCustomerAuthAvailableInRegion
+    Properties:
+      UserPoolId: !Ref ConnectCognitoUserPool
+      GenerateSecret: false # Do not generate a client secret based on Doc(https://docs.aws.amazon.com/connect/latest/adminguide/enable-connect-managed-auth.html#enable-customer-auth)

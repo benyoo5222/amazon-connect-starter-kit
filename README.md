@@ -23,6 +23,7 @@ This is a starter kit for building a contact center using Amazon Connect.
 > [!IMPORTANT]
 > Your aws user needs to have the `AmazonConnect_FullAccess` policy to create an Amazon Connect Instance.
 > To enable `Voice ID`, your aws user needs to have the `AmazonConnectVoiceIDFullAccess` policy.
+> To view customer authentication page on the console, check out the [Customer Authentication IAM Policies](https://docs.aws.amazon.com/connect/latest/adminguide/security-iam-amazon-connect-permissions.html#customer-authentication-page) documentation.
 
 > [!IMPORTANT]
 > Please look at the [Configuration Parameters](#configuration-parameters) section to set the correct parameters for your deployment.
@@ -116,6 +117,10 @@ This will delete the SAM/CloudFormation stack.
   - Encrypted by KMS Key created by this template
 - Connect Q Assistant
   - Encrypted by KMS Key created by this template
+- Cognito User Pool
+  - Purely Skeleton - Please change for your own use case
+- Cognito User Pool Client
+  - Purely Skeleton - Please change for your own use case
 
 ## Resources/Configurations not created using Cloudformation
 
@@ -136,6 +141,7 @@ This will delete the SAM/CloudFormation stack.
 - Creating Amazon Connect Case Domain [API - CreateDomain]
 - Associating Case Domain with Connect Instance [API - CreateIntegrationAssociation]
 - Associating Customer Authentication [API - CreateIntegrationAssociation + COGNITO_USER_POOL]
+- Associating Cognito User Pool with Connect Instance for Customer Authentication [API - CreateIntegrationAssociation + COGNITO_USER_POOL]
 
 ## AWS CLI Configuration
 
@@ -193,71 +199,88 @@ The following parameters can be configured in `packages/amazon-connect/scripts/s
 
 ### Connect Instance Parameters
 
-| Parameter                      | Description                                                                                                     | Default Value   | Required |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------- | --------------- | -------- |
-| IdentityManagementType         | Specifies whether the instance uses Connect-managed or SAML-based identity management                           | CONNECT_MANAGED | Optional |
-| InstanceAliasName              | The alias for the Connect instance (must start with a letter/number, can contain letters, numbers, and hyphens) | --              | Required |
-| ENVIRONMENT                    | The deployment environment (e.g., dev, prod)                                                                    | dev             | Required |
-| IsAutoResolveBestVoicesEnabled | Enables automatic resolution of best voices for text-to-speech                                                  | true            | Optional |
-| IsContactflowLogsEnabled       | Enables logging for contact flows                                                                               | true            | Optional |
-| IsContactLensEnabled           | Enables Amazon Connect Contact Lens features                                                                    | true            | Optional |
-| IsEarlyMediaEnabled            | Enables early media for calls                                                                                   | true            | Optional |
-| IsInboundCallsEnabled          | Enables inbound calling capabilities                                                                            | true            | Optional |
-| IsOutboundCallsEnabled         | Enables outbound calling capabilities                                                                           | true            | Optional |
-| IsUseCustomTTSVoicesEnabled    | Enables custom text-to-speech voices                                                                            | true            | Optional |
+| Parameter                      | Description                                                                                                     | Default Value              | Required |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------- | -------------------------- | -------- |
+| IdentityManagementType         | Specifies whether the instance uses Connect-managed or SAML-based identity management                           | CONNECT_MANAGED            | Optional |
+| InstanceAliasName              | The alias for the Connect instance (must start with a letter/number, can contain letters, numbers, and hyphens) | amazon-connect-starter-kit | Required |
+| ENVIRONMENT                    | The deployment environment (e.g., dev, prod)                                                                    | dev                        | Required |
+| IsAutoResolveBestVoicesEnabled | Enables automatic resolution of best voices for text-to-speech                                                  | true                       | Optional |
+| IsContactflowLogsEnabled       | Enables logging for contact flows                                                                               | true                       | Optional |
+| IsContactLensEnabled           | Enables Amazon Connect Contact Lens features                                                                    | true                       | Optional |
+| IsEarlyMediaEnabled            | Enables early media for calls                                                                                   | true                       | Optional |
+| IsInboundCallsEnabled          | Enables inbound calling capabilities                                                                            | true                       | Optional |
+| IsOutboundCallsEnabled         | Enables outbound calling capabilities                                                                           | true                       | Optional |
+| IsUseCustomTTSVoicesEnabled    | Enables custom text-to-speech voices                                                                            | true                       | Optional |
 
 ### Connect Storage Configuration Parameters
 
 | Parameter                      | Description                                        | Default Value   | Required |
 | ------------------------------ | -------------------------------------------------- | --------------- | -------- |
+| EnableCallRecordingsStorage    | Whether to store call recordings in S3             | true            | Optional |
 | CallRecordingsS3BucketPrefix   | Prefix for the S3 bucket storing call recordings   | CallRecordings  | Optional |
+| EnableChatTranscriptsStorage   | Whether to store chat transcripts in S3            | true            | Optional |
 | ChatTranscriptsS3BucketPrefix  | Prefix for the S3 bucket storing chat transcripts  | ChatTranscripts | Optional |
+| EnableScheduledReportsStorage  | Whether to store scheduled reports in S3           | true            | Optional |
 | ScheduledReportsS3BucketPrefix | Prefix for the S3 bucket storing scheduled reports | Reports         | Optional |
 
-### Connect Kinesis Stream Configuration Parameters
+### Connect Stream Configuration Parameters
 
 | Parameter                                     | Description                                                                         | Default Value | Required |
 | --------------------------------------------- | ----------------------------------------------------------------------------------- | ------------- | -------- |
+| EnableContactRecordsStream                    | Whether to enable contact records stream                                            | true          | Optional |
 | CRStreamRetentionPeriod                       | The number of hours for the data records to be available in the CR stream.          | 24            | Optional |
-| AgentEventStreamRetentionPeriod               | The number of hours for the data records to be available in the Agent Event stream. | 24            | Optional |
 | IsCRStreamServerSideEncryptionEnabled         | Whether to enable server-side encryption for the CR stream.                         | true          | Optional |
+| EnableAgentEventStream                        | Whether to enable agent event stream                                                | true          | Optional |
+| AgentEventStreamRetentionPeriod               | The number of hours for the data records to be available in the Agent Event stream. | 24            | Optional |
 | IsAgentEventStreamServerSideEncryptionEnabled | Whether to enable server-side encryption for the Agent Event stream.                | true          | Optional |
 
 ### Connect Kinesis Video Stream Configuration Parameters
 
-| Parameter                         | Description                                                                           | Default Value | Required |
-| --------------------------------- | ------------------------------------------------------------------------------------- | ------------- | -------- |
-| KinesisVideoStreamRetentionPeriod | The number of hours for the data records to be available in the Kinesis Video Stream. | 24            | Optional |
-| KinesisVideoStreamPrefix          | The prefix for the Kinesis Video Stream.                                              | --            | Required |
+| Parameter                         | Description                                                                           | Default Value  | Required |
+| --------------------------------- | ------------------------------------------------------------------------------------- | -------------- | -------- |
+| EnableKinesisVideoStream          | Whether to enable Kinesis video stream                                                | true           | Optional |
+| KinesisVideoStreamRetentionPeriod | The number of hours for the data records to be available in the Kinesis Video Stream. | 4              | Optional |
+| KinesisVideoStreamPrefix          | The prefix for the Kinesis Video Stream.                                              | customer-audio | Required |
 
 ### Connect Voice ID Configuration Parameters
 
-| Parameter                | Description                       | Default Value | Required |
-| ------------------------ | --------------------------------- | ------------- | -------- |
-| ConnectVoiceIDDomainName | The name for the Voice ID Domain. | --            | Required |
+| Parameter                | Description                       | Default Value                      | Required |
+| ------------------------ | --------------------------------- | ---------------------------------- | -------- |
+| EnableVoiceID            | Whether to enable Voice ID        | true                               | Optional |
+| ConnectVoiceIDDomainName | The name for the Voice ID Domain. | amazon-connect-starter-kit-callers | Required |
 
 ### Connect Customer Profile Configuration Parameters
 
-| Parameter                                                            | Description                                                                               | Default Value | Required |
-| -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ------------- | -------- |
-| UseDeadLetterQueueForCustomerProfile                                 | Whether to use a dead letter queue for the Customer Profile Queue.                        | true          | Optional |
-| ConnectCustomerProfileDeadLetterQueueMessageRetentionPeriodInSeconds | The number of seconds for the data records to be available in the Customer Profile Queue. | 345600        | Optional |
-| ConnectCustomerProfileDomainName                                     | The name for the Customer Profile Domain.                                                 | --            | Required |
-| ConnectCustomerProfileDataExpirationPeriodInDays                     | The number of days for the data records to be available in the Customer Profile Domain.   | --            | Required |
+| Parameter                                                            | Description                                                                               | Default Value                        | Required |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------ | -------- |
+| EnableCustomerProfile                                                | Whether to enable Customer Profile                                                        | true                                 | Optional |
+| UseDeadLetterQueueForCustomerProfile                                 | Whether to use a dead letter queue for the Customer Profile Queue.                        | true                                 | Optional |
+| ConnectCustomerProfileDeadLetterQueueMessageRetentionPeriodInSeconds | The number of seconds for the data records to be available in the Customer Profile Queue. | 345600                               | Optional |
+| ConnectCustomerProfileDomainName                                     | The name for the Customer Profile Domain.                                                 | amazon-connect-starter-kit-customers | Required |
+| ConnectCustomerProfileDataExpirationPeriodInDays                     | The number of days for the data records to be available in the Customer Profile Domain.   | 365                                  | Required |
 
 ### Connect Q Configuration Parameters
 
-| Parameter             | Description                           | Default Value | Required |
-| --------------------- | ------------------------------------- | ------------- | -------- |
-| ConnectQAssistantName | The name for the Connect Q Assistant. | --            | Required |
+| Parameter             | Description                           | Default Value                        | Required |
+| --------------------- | ------------------------------------- | ------------------------------------ | -------- |
+| EnableConnectQ        | Whether to enable Connect Q           | true                                 | Optional |
+| ConnectQAssistantName | The name for the Connect Q Assistant. | amazon-connect-starter-kit-assistant | Required |
+
+### Cognito Configuration for Customer Auth Parameters
+
+| Parameter                         | Description                                             | Default Value | Required |
+| --------------------------------- | ------------------------------------------------------- | ------------- | -------- |
+| EnableCustomerAuth                | Whether to enable Customer Auth                         | true          | Optional |
+| CognitoUserPoolTier               | The tier for the Cognito User Pool                      | ESSENTIALS    | Optional |
+| CognitoUserPoolDeletionProtection | Whether to enable deletion protection for the User Pool | ACTIVE        | Optional |
 
 ### CLI Specific Parameters
 
-| Parameter        | Description                                    | Default Value | Required |
-| ---------------- | ---------------------------------------------- | ------------- | -------- |
-| PROFILE          | AWS CLI profile name for authentication        | --            | Required |
-| IS_GUIDED        | Whether to use guided deployment mode          | false         | Required |
-| STACK_NAME       | Name of the CloudFormation stack               | --            | Required |
-| REGION           | AWS region for deployment                      | --            | Required |
-| DEBUG_DEPLOYMENT | Whether to enable debug logging for deployment | false         | Optional |
-| DEBUG_DELETE     | Whether to enable debug logging for deletion   | false         | Optional |
+| Parameter        | Description                                    | Default Value              | Required |
+| ---------------- | ---------------------------------------------- | -------------------------- | -------- |
+| PROFILE          | AWS CLI profile name for authentication        | default                    | Required |
+| IS_GUIDED        | Whether to use guided deployment mode          | false                      | Required |
+| STACK_NAME       | Name of the CloudFormation stack               | amazon-connect-starter-kit | Required |
+| REGION           | AWS region for deployment                      | us-east-1                  | Required |
+| DEBUG_DEPLOYMENT | Whether to enable debug logging for deployment | true                       | Optional |
+| DEBUG_DELETE     | Whether to enable debug logging for deletion   | true                       | Optional |
