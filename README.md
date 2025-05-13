@@ -142,6 +142,8 @@ This will delete the SAM/CloudFormation stack.
 - Associating Case Domain with Connect Instance [API - CreateIntegrationAssociation]
 - Associating Customer Authentication [API - CreateIntegrationAssociation + COGNITO_USER_POOL]
 - Associating Cognito User Pool with Connect Instance for Customer Authentication [API - CreateIntegrationAssociation + COGNITO_USER_POOL]
+- Global Resiliency
+- Enable Lex Bot Management & Enable Bot Analytics [API - UpdateInstanceAttribute + BOT_MANAGEMENT but not in docs]
 
 ## AWS CLI Configuration
 
