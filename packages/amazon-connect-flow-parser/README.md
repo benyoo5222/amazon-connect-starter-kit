@@ -65,11 +65,11 @@ For each node/block, we do the following:
 
 1. Pop the node off the stack
 2. Check if the node has any children nodes/blocks by checking the `Transitions` property in the contact flow block.
-   2.1 If there are no children nodes/blocks, we have reached the end of the path and we can add the path to the list of paths.
-   2.2 If there are children nodes/blocks, we need to do the following:
-   2.2.1 Create new nodes for each child node/block
-   2.2.2 The path for each child node/block will be the concatenation of the parent node's path and the parent node itself
-   2.2.3 Push each child node onto the stack
+3. If there are no children nodes/blocks, we have reached the end of the path and we can add the path to the list of paths.
+4. If there are children nodes/blocks, we need to do the following:
+   1. Create new nodes for each child node/block
+   2. The path for each child node/block will be the concatenation of the parent node's path and the parent node itself
+   3. Push each child node onto the stack
 
 ```typescript
 // Example of checking if the node has children nodes/blocks
