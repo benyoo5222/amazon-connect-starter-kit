@@ -370,7 +370,7 @@ The above example relies on `FirstName` and `LastName` attribute values that's s
 
 We know this because `$.` is a reserved keyword in Amazon Connect to reference a contact attribute. And the `External` namespace is only available for Lambda responses.
 
-> [!IMPORTANT](https://img.shields.io/badge/Important-Important-blue)
+> [!IMPORTANT]
 > A Contact Attribute can be set by a Block, Internal System (Amazon Connect), or External System (App, API, etc).
 > If there's no reference of a contact attribute being set, the contact could already have the attribute from a previous conversation.
 > For example, even if the contact flow does not set a particular contact attribute, the attribute could exist because it's a transfer from an agent or set by a previous conversation.
@@ -407,8 +407,7 @@ const contactAttribute = {
 ```
 
 > [!IMPORTANT]
-> Why use a stack instead of just a single map?
-> This will allow the end users to see the state of the contact attributes at any point in the path.
+> A stack allows the end users to see the state of the contact attributes at any point in the path.
 
 The stack will be updated each time we insert a new action block into the path stack.
 
