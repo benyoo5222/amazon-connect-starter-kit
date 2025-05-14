@@ -193,6 +193,9 @@ Then based on 4 data types, the algorithm will find the paths:
 
 ### Flow Type Validation and Rules
 
+> [!IMPORTANT]
+> The outbound campaign flow is not supported yet.
+
 First, we will validate that the contact flow type is valid.
 
 Then, we will validate that both the action block and the contact channel type are valid for the contact flow type.
