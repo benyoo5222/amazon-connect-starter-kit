@@ -2,6 +2,15 @@
 
 This is a starter kit for building a contact center using Amazon Connect.
 
+## Features
+
+- Amazon Connect Instance
+- Amazon Connect Test Suite
+  - Contact Flows Paths Finder
+  - Automated Test Cases
+  - Automated Test Cases Runner
+  - Future: Contact flows diff checker - Shows what has changed in a contact flow
+
 ## Prerequisites
 
 - Docker
