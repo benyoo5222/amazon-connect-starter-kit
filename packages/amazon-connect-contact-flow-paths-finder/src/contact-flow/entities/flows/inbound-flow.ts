@@ -2,26 +2,37 @@ import { ContactFlowActionBlockTypes } from "@/contact-flow/enums/action-blocks/
 import { ContactFlowType } from "@/contact-flow/enums/flows/contact-flow-types";
 import { IContactFlowActionBlock } from "@/contact-flow/interfaces/action-blocks/contact-flow-action-block";
 import { IInboundContactFlow } from "@/contact-flow/interfaces/flows/inbound-flow";
+import { ContactChannelTypes } from "@/contact-flow/enums/contact/contact-channel-types";
 
 export class InboundContactFlow implements IInboundContactFlow {
-  private readonly _id: string;
-  private readonly _type: ContactFlowType.INBOUND;
-  private readonly _name: string;
-  private readonly _description: string;
-  private readonly _actionBlocks: IContactFlowActionBlock[];
-  private readonly _supportedActionBlockTypes: ContactFlowActionBlockTypes[];
+  private _id: string;
+  private _type: ContactFlowType.INBOUND;
+  private _name: string;
+  private _description: string;
+  private _actionBlocks: IContactFlowActionBlock[];
+  private _supportedActionBlockTypes: ContactFlowActionBlockTypes[];
+  private _supportedContactChannelTypes: ContactChannelTypes[];
+  private _rawContactFlow: string;
 
-  constructor(
-    id: string,
-    name: string,
-    description: string,
-    actionBlocks: IContactFlowActionBlock[]
-  ) {
+  constructor({
+    id,
+    name,
+    description,
+    actionBlocks,
+    rawContactFlow,
+  }: {
+    id: string;
+    name: string;
+    description: string;
+    actionBlocks: IContactFlowActionBlock[];
+    rawContactFlow: string;
+  }) {
     this._id = id;
     this._type = ContactFlowType.INBOUND;
     this._name = name;
     this._description = description;
     this._actionBlocks = actionBlocks;
+    this._rawContactFlow = rawContactFlow;
     this._supportedActionBlockTypes = [
       ContactFlowActionBlockTypes.PLAY_PROMPT,
       ContactFlowActionBlockTypes.AMAZON_Q_IN_CONNECT,
@@ -65,6 +76,38 @@ export class InboundContactFlow implements IInboundContactFlow {
       ContactFlowActionBlockTypes.TRANSFER_TO_QUEUE,
       ContactFlowActionBlockTypes.WAIT,
     ];
+    this._supportedContactChannelTypes = [
+      ContactChannelTypes.VOICE,
+      ContactChannelTypes.CHAT,
+      ContactChannelTypes.EMAIL,
+      ContactChannelTypes.TASK,
+    ];
+  }
+
+  /**************************************************
+   * Public Methods
+   **************************************************/
+  /**
+   * Checks if the action blocks in the contact flow are supported by the contact flow type
+   *
+   * @returns True if the action blocks are supported, false otherwise
+   */
+  areActionBlocksSupported(): boolean {
+    return this._actionBlocks.every((actionBlock) =>
+      this._supportedActionBlockTypes.includes(actionBlock.type)
+    );
+  }
+
+  /**
+   * Checks if the contact channel type is supported by the contact flow type
+   *
+   * @param contactChannelType - The contact channel type to check
+   * @returns True if the contact channel type is supported, false otherwise
+   */
+  isContactChannelTypeSupported(
+    contactChannelType: ContactChannelTypes
+  ): boolean {
+    return this._supportedContactChannelTypes.includes(contactChannelType);
   }
 
   /**************************************************
@@ -92,5 +135,13 @@ export class InboundContactFlow implements IInboundContactFlow {
 
   get supportedActionBlockTypes(): ContactFlowActionBlockTypes[] {
     return this._supportedActionBlockTypes;
+  }
+
+  get rawContactFlow(): string {
+    return this._rawContactFlow;
+  }
+
+  get supportedContactChannelTypes(): ContactChannelTypes[] {
+    return this._supportedContactChannelTypes;
   }
 }

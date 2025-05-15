@@ -264,12 +264,17 @@ const endFlowResumeBlock = {
 
 If the block cannot be used for the contact flow type, we will throw an error.
 
-If the block can be used for the contact flow type, the algorithm will check how the block can be used for the contact flow type.
+If the block can be used for the contact flow type, the algorithm will check how the block's behaviour is affected by the contact flow type.
 
 For example, `End flow / Resume` block changes behaviour based on the contact flow type:
 
 - For Customer Queue Flow, the block will restart the flow.
 - For Inbound Flow, the block will end the flow.
+
+Another example is the `Play Prompt` block:
+
+- For Inbound Flow, the block supports all configuration options.
+- But for Customer Queue Flow, it cannot play a prompt from S3.
 
 #### Flow Type relationship with contact channel type
 
@@ -318,6 +323,10 @@ const voiceIdBlock = {
 ```
 
 Also the behaviour of the block can change based on the contact channel type.
+
+Lastly, a block's configuration affects which contact channel type is supported.
+
+If a contact channel type is not supported by the action block, we will always go to the error path.
 
 #### Action Block relationship with contact attribute
 
@@ -492,3 +501,45 @@ At the current moment, the algorithm will simply tag the block as a user/custome
 ```bash
 docker compose -f docker-compose-dev.yml up -d
 ```
+
+## Supported Contact Flow Types/Contact Channel Types for Action Blocks
+
+This section is a list of all of the blocks and it's supported contact flow types and contact channel types.
+
+A contact flow type or a contact channel type might only be partially supported by a block.
+
+Here is a legend for supported values:
+
+| Supported Value | Description                                                                                                                                       |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Yes             | The block fully supports the contact flow type or contact channel type.                                                                           |
+| No              | The block does not support the contact flow type or contact channel type.                                                                         |
+| Partial         | The block does support the contact flow type or contact channel type, but with some limitations. Usually based on the configuration of the block. |
+| No\*            | The block does not support the contact flow type or contact channel type but it goes down the success path.                                       |
+
+### PlayPrompt Block
+
+| Contact Flow Type     | Supported |
+| --------------------- | --------- |
+| Inbound Flow          | Yes       |
+| Customer Queue Flow   | Partial   |
+| Customer Hold Flow    | Partial   |
+| Agent Whisper Flow    | Partial   |
+| Outbound Whisper Flow | Partial   |
+| Transfer to Agent     | Yes       |
+| Transfer to Queue     | Yes       |
+
+`Customer Queue Flow`, `Customer Hold Flow`, `Agent Whisper Flow`, `Outbound Whisper Flow` cannot play a prompt from S3.
+
+| Contact Channel Type | Supported |
+| -------------------- | --------- |
+| Voice                | Yes       |
+| Chat                 | Partial   |
+| Task                 | Partial   |
+| Email                | No\*      |
+
+`Chat` and `Task` will go down the error path if either S3 audio or a prompt from the library is used.
+
+`Email` is not supported. But it always goes down the success path.
+
+### Get Customer Input Block
