@@ -1,39 +1,30 @@
 import { ContactFlowActionBlockTypes } from "@/contact-flow/enums/action-blocks/contact-flow-action-block-types";
 import { ContactFlowType } from "@/contact-flow/enums/flows/contact-flow-types";
 import { IContactFlowActionBlock } from "@/contact-flow/interfaces/action-blocks/contact-flow-action-block";
-import { IInboundContactFlow } from "@/contact-flow/interfaces/flows/inbound-flow";
 import { ContactChannelTypes } from "@/contact-flow/enums/contact/contact-channel-types";
+import { ContactFlowStatus } from "@/contact-flow/enums/flows/contact-flow-status";
+import { ContactFlowState } from "@/contact-flow/enums/flows/contact-flow-states";
+import { ContactFlow } from "./contact-flow";
 
-export class InboundContactFlow implements IInboundContactFlow {
-  private _id: string;
-  private _type: ContactFlowType.INBOUND;
-  private _name: string;
-  private _description: string;
-  private _actionBlocks: IContactFlowActionBlock[];
-  private _supportedActionBlockTypes: ContactFlowActionBlockTypes[];
-  private _supportedContactChannelTypes: ContactChannelTypes[];
-  private _rawContactFlow: string;
-
+export class InboundContactFlow extends ContactFlow {
   constructor({
     id,
     name,
     description,
     actionBlocks,
     rawContactFlow,
+    status,
+    state,
   }: {
     id: string;
     name: string;
     description: string;
     actionBlocks: IContactFlowActionBlock[];
     rawContactFlow: string;
+    status: ContactFlowStatus;
+    state: ContactFlowState;
   }) {
-    this._id = id;
-    this._type = ContactFlowType.INBOUND;
-    this._name = name;
-    this._description = description;
-    this._actionBlocks = actionBlocks;
-    this._rawContactFlow = rawContactFlow;
-    this._supportedActionBlockTypes = [
+    const supportedActionBlockTypes = [
       ContactFlowActionBlockTypes.PLAY_PROMPT,
       ContactFlowActionBlockTypes.AMAZON_Q_IN_CONNECT,
       ContactFlowActionBlockTypes.AUTHENTICATE_CUSTOMER,
@@ -76,72 +67,24 @@ export class InboundContactFlow implements IInboundContactFlow {
       ContactFlowActionBlockTypes.TRANSFER_TO_QUEUE,
       ContactFlowActionBlockTypes.WAIT,
     ];
-    this._supportedContactChannelTypes = [
+    const supportedContactChannelTypes = [
       ContactChannelTypes.VOICE,
       ContactChannelTypes.CHAT,
       ContactChannelTypes.EMAIL,
       ContactChannelTypes.TASK,
     ];
-  }
 
-  /**************************************************
-   * Public Methods
-   **************************************************/
-  /**
-   * Checks if the action blocks in the contact flow are supported by the contact flow type
-   *
-   * @returns True if the action blocks are supported, false otherwise
-   */
-  areActionBlocksSupported(): boolean {
-    return this._actionBlocks.every((actionBlock) =>
-      this._supportedActionBlockTypes.includes(actionBlock.type)
-    );
-  }
-
-  /**
-   * Checks if the contact channel type is supported by the contact flow type
-   *
-   * @param contactChannelType - The contact channel type to check
-   * @returns True if the contact channel type is supported, false otherwise
-   */
-  isContactChannelTypeSupported(
-    contactChannelType: ContactChannelTypes
-  ): boolean {
-    return this._supportedContactChannelTypes.includes(contactChannelType);
-  }
-
-  /**************************************************
-   * Getters
-   **************************************************/
-  get id(): string {
-    return this._id;
-  }
-
-  get type(): ContactFlowType {
-    return this._type;
-  }
-
-  get name(): string {
-    return this._name;
-  }
-
-  get description(): string {
-    return this._description;
-  }
-
-  get actionBlocks(): IContactFlowActionBlock[] {
-    return this._actionBlocks;
-  }
-
-  get supportedActionBlockTypes(): ContactFlowActionBlockTypes[] {
-    return this._supportedActionBlockTypes;
-  }
-
-  get rawContactFlow(): string {
-    return this._rawContactFlow;
-  }
-
-  get supportedContactChannelTypes(): ContactChannelTypes[] {
-    return this._supportedContactChannelTypes;
+    super({
+      id,
+      type: ContactFlowType.INBOUND,
+      name,
+      description,
+      actionBlocks,
+      supportedActionBlockTypes,
+      supportedContactChannelTypes,
+      rawContactFlow,
+      status,
+      state,
+    });
   }
 }

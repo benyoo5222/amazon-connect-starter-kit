@@ -8,6 +8,9 @@ Version 1.0.0 uses the raw JSON of the contact flow to find the paths.
 
 Next version will use an IR (Intermediate Representation) of the contact flow to find the paths.
 
+> [!IMPORTANT]
+> At the moment, only published contact flows are supported.
+
 ## How does it work?
 
 The goal is to create a list of lists that represent all of the paths a contact can take in the contact flow.

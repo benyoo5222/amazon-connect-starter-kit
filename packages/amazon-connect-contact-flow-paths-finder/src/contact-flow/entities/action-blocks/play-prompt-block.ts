@@ -43,9 +43,6 @@ export class PlayPromptActionBlock implements IPlayPromptBlock {
     transitions: Record<string, any>;
     parentContactFlowType: ContactFlowType;
   }) {
-    this._id = id;
-    this._type = type;
-
     const { isValid, invalidReason } = this._areParametersValid({
       parameters,
       contactFlowType: parentContactFlowType,
@@ -55,6 +52,8 @@ export class PlayPromptActionBlock implements IPlayPromptBlock {
       throw new Error(invalidReason);
     }
 
+    this._id = id;
+    this._type = type;
     this._parameters = parameters;
     this._transitions = transitions;
     this._supportedContactFlowTypes = [
