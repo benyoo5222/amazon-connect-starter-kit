@@ -1,0 +1,18 @@
+services:
+  amazon-connect-contact-flow-paths-finder:
+    build:
+      context: .
+      dockerfile: packages/amazon-connect-contact-flow-paths-finder/Dockerfile.dev
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+    volumes:
+      - ./packages/amazon-connect-contact-flow-paths-finder:/app/packages/amazon-connect-contact-flow-paths-finder # Copy the package to the container
+      - /app/node_modules # Exclude node_modules from the container
+      - /app/packages/amazon-connect-contact-flow-paths-finder/node_modules # Exclude node_modules from the container
+    networks:
+      - amazon-connect-network
+
+networks:
+  amazon-connect-network:
+    driver: bridge

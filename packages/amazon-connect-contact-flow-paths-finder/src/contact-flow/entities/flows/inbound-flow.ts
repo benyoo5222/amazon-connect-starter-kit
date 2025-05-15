@@ -1,7 +1,7 @@
-import { ContactFlowType } from "../../enums/flows/contact-flow-types";
-import { IContactFlowActionBlock } from "../../interfaces/action-blocks/contact-flow-action-block";
-import { IInboundContactFlow } from "../../interfaces/flows/inbound-flow";
-import { ContactFlowActionBlockTypes } from "../../enums/action-blocks/contact-flowaction-block-types";
+import { ContactFlowActionBlockTypes } from "@/contact-flow/enums/action-blocks/contact-flow-action-block-types";
+import { ContactFlowType } from "@/contact-flow/enums/flows/contact-flow-types";
+import { IContactFlowActionBlock } from "@/contact-flow/interfaces/action-blocks/contact-flow-action-block";
+import { IInboundContactFlow } from "@/contact-flow/interfaces/flows/inbound-flow";
 
 export class InboundContactFlow implements IInboundContactFlow {
   private readonly _id: string;

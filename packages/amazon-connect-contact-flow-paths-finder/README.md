@@ -486,3 +486,9 @@ At the current moment, the algorithm will simply tag the block as a user/custome
 > The algorithm will create all possible paths.
 > It is up to the end user/client to provide valid values that will lead the contact to the route the algorithm has created.
 > For example, if one of the paths is pressing 1 to speak to an agent, the end user/client must provide the value 1 in the `User Action Value` field.
+
+## How to run the package
+
+```bash
+docker compose -f docker-compose-dev.yml up -d
+```

@@ -1,6 +1,6 @@
-import { ContactFlowActionBlockTypes } from "../../enums/action-blocks/contact-flowaction-block-types";
-import { ContactFlowType } from "../../enums/flows/contact-flow-types";
-import { IContactFlowActionBlock } from "../action-blocks/contact-flow-action-block";
+import { ContactFlowActionBlockTypes } from "@/contact-flow/enums/action-blocks/contact-flow-action-block-types";
+import { ContactFlowType } from "@/contact-flow/enums/flows/contact-flow-types";
+import { IContactFlowActionBlock } from "@/contact-flow/interfaces/action-blocks/contact-flow-action-block";
 
 export interface IContactFlow {
   id: string;

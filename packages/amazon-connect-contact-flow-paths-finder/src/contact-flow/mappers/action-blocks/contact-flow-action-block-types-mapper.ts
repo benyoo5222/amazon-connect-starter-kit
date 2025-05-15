@@ -1,15 +1,25 @@
-import { ContactFlowActionBlockTypes } from "../../enums/action-blocks/contact-flowaction-block-types";
+import { ContactFlowActionBlockTypes } from "@/contact-flow/enums/action-blocks/contact-flow-action-block-types";
 
 /**
- * Maps the action block type in the contact flow to the corresponding enum value
+ * Maps the contact flow block types to and from application action block types
  */
 export class ContactFlowActionBlockTypesMapper {
-  static map(actionBlockType: string): ContactFlowActionBlockTypes {
-    switch (actionBlockType) {
+  /**
+   * Maps the contact flow block types to application action block types
+  
+   * @param contactFlowActionBlockType - The contact flow block type
+   * @returns The application action block type
+   */
+  static toActionBlockTypes(
+    contactFlowActionBlockType: string
+  ): ContactFlowActionBlockTypes {
+    switch (contactFlowActionBlockType) {
       case "MessageParticipant":
         return ContactFlowActionBlockTypes.PLAY_PROMPT;
       default:
-        throw new Error(`Action block type ${actionBlockType} not supported`);
+        throw new Error(
+          `Action block type ${contactFlowActionBlockType} not supported`
+        );
     }
   }
 }

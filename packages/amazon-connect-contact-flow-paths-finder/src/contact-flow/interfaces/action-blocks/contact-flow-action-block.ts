@@ -1,4 +1,4 @@
-import { ContactFlowActionBlockTypes } from "../../enums/action-blocks/contact-flowaction-block-types";
+import { ContactFlowActionBlockTypes } from "@/contact-flow/enums/action-blocks/contact-flow-action-block-types";
 
 export interface IContactFlowActionBlock {
   id: string;
