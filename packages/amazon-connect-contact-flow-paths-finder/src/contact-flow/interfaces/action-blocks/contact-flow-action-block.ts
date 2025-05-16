@@ -13,4 +13,5 @@ export interface IContactFlowActionBlock {
   isContactChannelTypeSupported(
     contactChannelType: ContactChannelTypes
   ): boolean;
+  getNextActionBlockIds(contactChannelType: ContactChannelTypes): string[];
 }

@@ -1,10 +1,10 @@
 import { ContactFlowActionBlockTypes } from "@/contact-flow/enums/action-blocks/contact-flow-action-block-types";
 import { ContactChannelTypes } from "@/contact-flow/enums/contact/contact-channel-types";
-import { IContactFlowActionBlock } from "@/contact-flow/interfaces/action-blocks/contact-flow-action-block";
 import { ContactFlowType } from "@/contact-flow/enums/flows/contact-flow-types";
 import { ContactFlowActionBlock } from "./contact-flow-action-block";
+import { IContactFlowActionBlock } from "@/contact-flow/interfaces/action-blocks/contact-flow-action-block";
 
-export class AgentQActionBlock
+export class DisconnectParticipantActionBlock
   extends ContactFlowActionBlock
   implements IContactFlowActionBlock
 {
@@ -30,6 +30,8 @@ export class AgentQActionBlock
       supportedContactFlowTypes: [
         ContactFlowType.INBOUND,
         ContactFlowType.CUSTOMER_QUEUE,
+        ContactFlowType.TRANSFER_TO_AGENT,
+        ContactFlowType.TRANSFER_TO_QUEUE,
       ],
       supportedContactChannels: [
         ContactChannelTypes.VOICE,
@@ -42,15 +44,13 @@ export class AgentQActionBlock
   /**************************************************
    * Public Methods
    **************************************************/
+
   /**
-   * Checks if the contact channel type is supported by the action block
-   *
-   * @param contactChannelType - The contact channel type to check
-   * @returns True if the contact channel type is supported, false otherwise
+   * Gets the next action blocks
+   * @returns The next action blocks
    */
-  isContactChannelTypeSupported(
-    contactChannelType: ContactChannelTypes
-  ): boolean {
-    return this._supportedContactChannels.includes(contactChannelType);
+  getNextActionBlockIds(contactChannelType: ContactChannelTypes): string[] {
+    // No next action blocks
+    return [];
   }
 }

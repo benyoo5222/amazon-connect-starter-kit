@@ -8,6 +8,7 @@ import { ContactFlowState } from "@/contact-flow/enums/flows/contact-flow-states
 
 export class ContactFlow implements IContactFlow {
   protected _id: string;
+  protected _startActionBlockId: string;
   protected _type: ContactFlowType;
   protected _name: string;
   protected _description: string;
@@ -20,6 +21,7 @@ export class ContactFlow implements IContactFlow {
 
   constructor({
     id,
+    startActionBlockId,
     type,
     name,
     description,
@@ -31,6 +33,7 @@ export class ContactFlow implements IContactFlow {
     state,
   }: {
     id: string;
+    startActionBlockId: string;
     type: ContactFlowType;
     name: string;
     description: string;
@@ -54,7 +57,12 @@ export class ContactFlow implements IContactFlow {
       );
     }
 
+    if (!this._doesStartActionBlockExist(actionBlocks, startActionBlockId)) {
+      throw new Error("Start action block does not exist");
+    }
+
     this._id = id;
+    this._startActionBlockId = startActionBlockId;
     this._type = type;
     this._name = name;
     this._description = description;
@@ -109,6 +117,15 @@ export class ContactFlow implements IContactFlow {
     return status === ContactFlowStatus.PUBLISHED;
   }
 
+  _doesStartActionBlockExist(
+    actionBlocks: IContactFlowActionBlock[],
+    startActionBlockId: string
+  ): boolean {
+    return actionBlocks.some(
+      (actionBlock) => actionBlock.id === startActionBlockId
+    );
+  }
+
   /**************************************************
    * Public Methods
    **************************************************/
@@ -135,11 +152,31 @@ export class ContactFlow implements IContactFlow {
     return this._supportedContactChannelTypes.includes(contactChannelType);
   }
 
+  /**
+   * Gets the starting action block of the contact flow
+   *
+   * @returns The starting action block of the contact flow
+   */
+  getStartingActionBlock(): IContactFlowActionBlock {
+    const startingActionBlock = this._actionBlocks.find(
+      (actionBlock) => actionBlock.id === this._startActionBlockId
+    );
+
+    if (!startingActionBlock) {
+      throw new Error("Starting action block does not exist");
+    }
+
+    return startingActionBlock;
+  }
   /**************************************************
    * Getters
    **************************************************/
   get id(): string {
     return this._id;
+  }
+
+  get startActionBlockId(): string {
+    return this._startActionBlockId;
   }
 
   get type(): ContactFlowType {

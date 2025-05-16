@@ -9,6 +9,7 @@ import { ContactFlow } from "./contact-flow";
 export class InboundContactFlow extends ContactFlow {
   constructor({
     id,
+    startActionBlockId,
     name,
     description,
     actionBlocks,
@@ -17,6 +18,7 @@ export class InboundContactFlow extends ContactFlow {
     state,
   }: {
     id: string;
+    startActionBlockId: string;
     name: string;
     description: string;
     actionBlocks: IContactFlowActionBlock[];
@@ -76,6 +78,7 @@ export class InboundContactFlow extends ContactFlow {
 
     super({
       id,
+      startActionBlockId,
       type: ContactFlowType.INBOUND,
       name,
       description,

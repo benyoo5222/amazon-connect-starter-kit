@@ -6,7 +6,8 @@ import { ContactFlowStatus } from "@/contact-flow/enums/flows/contact-flow-statu
 import { ContactFlowState } from "@/contact-flow/enums/flows/contact-flow-states";
 
 export interface IContactFlow {
-  id: string;
+  id: string; // Required (Refers to the Contact Flow ID)
+  startActionBlockId: string; // Required (Refers to the starting block of the Contact Flow)
   type: ContactFlowType;
   name: string;
   description?: string;
@@ -20,4 +21,5 @@ export interface IContactFlow {
   isContactChannelTypeSupported(
     contactChannelType: ContactChannelTypes
   ): boolean;
+  getStartingActionBlock(): IContactFlowActionBlock;
 }

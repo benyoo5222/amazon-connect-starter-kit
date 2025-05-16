@@ -2,25 +2,12 @@ import { ContactFlowActionBlockTypes } from "@/contact-flow/enums/action-blocks/
 import { ContactChannelTypes } from "@/contact-flow/enums/contact/contact-channel-types";
 import { ContactFlowType } from "@/contact-flow/enums/flows/contact-flow-types";
 import { IPlayPromptBlock } from "@/contact-flow/interfaces/action-blocks/play-prompt-block";
+import { ContactFlowActionBlock } from "./contact-flow-action-block";
 
-export class PlayPromptActionBlock implements IPlayPromptBlock {
-  private _id: string;
-  private _type: ContactFlowActionBlockTypes;
-  private _parameters: {
-    PromptId?: string; // Id or ARN of the prompt to play
-    Text?: string; // Text to play (Text to speech)
-    SSML?: string; // SSML to play
-    Media?: {
-      Uri: string; // Location of the message
-      SourceType: "S3"; // The source from which the message will be fetched. The only supported type is S3
-      MediaType: "Audio"; // The type of the message to be played. The only supported type is Audio
-    };
-  };
-  private _transitions: Record<string, any>;
-  private _supportedContactFlowTypes: ContactFlowType[];
-  private _supportedContactChannels: ContactChannelTypes[];
-  private _parentContactFlowType: ContactFlowType;
-
+export class PlayPromptActionBlock
+  extends ContactFlowActionBlock
+  implements IPlayPromptBlock
+{
   constructor({
     id,
     type,
@@ -40,9 +27,37 @@ export class PlayPromptActionBlock implements IPlayPromptBlock {
         MediaType: "Audio";
       };
     };
-    transitions: Record<string, any>;
+    transitions: {
+      NextAction: string;
+      Errors: [
+        {
+          NextAction: string;
+          ErrorType: "NoMatchingError";
+        },
+      ];
+    };
     parentContactFlowType: ContactFlowType;
   }) {
+    super({
+      id,
+      type,
+      parameters,
+      transitions,
+      parentContactFlowType,
+      supportedContactFlowTypes: [
+        ContactFlowType.INBOUND,
+        ContactFlowType.CUSTOMER_QUEUE,
+        ContactFlowType.CUSTOMER_WHISPER,
+        ContactFlowType.OUTBOUND_WHISPER,
+        ContactFlowType.AGENT_WHISPER,
+      ],
+      supportedContactChannels: [
+        ContactChannelTypes.VOICE,
+        ContactChannelTypes.CHAT,
+        ContactChannelTypes.TASK,
+      ],
+    });
+
     const { isValid, invalidReason } = this._areParametersValid({
       parameters,
       contactFlowType: parentContactFlowType,
@@ -51,29 +66,17 @@ export class PlayPromptActionBlock implements IPlayPromptBlock {
     if (!isValid) {
       throw new Error(invalidReason);
     }
-
-    this._id = id;
-    this._type = type;
-    this._parameters = parameters;
-    this._transitions = transitions;
-    this._supportedContactFlowTypes = [
-      ContactFlowType.INBOUND,
-      ContactFlowType.CUSTOMER_QUEUE,
-      ContactFlowType.CUSTOMER_WHISPER,
-      ContactFlowType.OUTBOUND_WHISPER,
-      ContactFlowType.AGENT_WHISPER,
-    ];
-    this._supportedContactChannels = [
-      ContactChannelTypes.VOICE,
-      ContactChannelTypes.CHAT,
-      ContactChannelTypes.TASK,
-    ];
-    this._parentContactFlowType = parentContactFlowType;
   }
 
   /**************************************************
    * Private Methods
    **************************************************/
+  /**
+   * Checks if the parameters are valid
+   * @param parameters - The parameters to check
+   * @param contactFlowType - The contact flow type
+   * @returns True if the parameters are valid, false otherwise
+   */
   _areParametersValid({
     parameters,
     contactFlowType,
@@ -179,12 +182,20 @@ export class PlayPromptActionBlock implements IPlayPromptBlock {
     };
   }
 
+  /**
+   * Checks if the block is configured for audio
+   * @returns True if the block is configured for audio, false otherwise
+   */
+  _isBlockConfiguredForAudio() {
+    return this._parameters.Media || this._parameters.PromptId;
+  }
+
   /**************************************************
    * Public Methods
    **************************************************/
   /**
    * Checks if the contact channel type is supported by the action block and it's configuration
-   *
+   * @override
    * @param contactChannelType - The contact channel type to check
    * @returns True if the contact channel type is supported, false otherwise
    */
@@ -203,7 +214,11 @@ export class PlayPromptActionBlock implements IPlayPromptBlock {
 
     // Media or PromptID means that an Audio will play to the contact
     // Neither Chat or Task can listen to audio
-    if (this._parameters.Media || this._parameters.PromptId) {
+    if (
+      this._isBlockConfiguredForAudio() &&
+      (contactChannelType === ContactChannelTypes.CHAT ||
+        contactChannelType === ContactChannelTypes.TASK)
+    ) {
       return false;
     }
 
@@ -211,34 +226,83 @@ export class PlayPromptActionBlock implements IPlayPromptBlock {
     return this._supportedContactChannels.includes(contactChannelType);
   }
 
+  /**
+   * Gets the next action blocks
+   * @returns The next action blocks
+   */
+  getNextActionBlockIds(contactChannelType: ContactChannelTypes): string[] {
+    // Next actions are determined by contact channel type, block's configuration,
+    // contact flow type and transitions
+    const errorPathBlockIds = this.transitions.Errors.map(
+      (errorPath) => errorPath.NextAction
+    );
+
+    // First, check if the the contact channel type is supported
+    // If not, it will always go the error path
+    // But if there is no error path (older blocks), it will go to the success path
+    if (!this.isContactChannelTypeSupported(contactChannelType)) {
+      if (errorPathBlockIds.length > 0) {
+        return errorPathBlockIds;
+      }
+
+      // No error path, so it will go to the success path
+      return [this._transitions.NextAction];
+    }
+
+    // The contact channel type is supported, so get all the next action blocks
+    return [...errorPathBlockIds, this._transitions.NextAction];
+  }
+
   /**************************************************
    * Getters
    **************************************************/
-  get id(): string {
-    return this._id;
+  /**
+   * @override
+   * @returns The parameters of the play prompt action block
+   */
+  get parameters(): {
+    PromptId?: string;
+    Text?: string;
+    SSML?: string;
+    Media?: {
+      Uri: string;
+      SourceType: "S3";
+      MediaType: "Audio";
+    };
+  } {
+    return this._parameters as {
+      PromptId?: string;
+      Text?: string;
+      SSML?: string;
+      Media?: {
+        Uri: string;
+        SourceType: "S3";
+        MediaType: "Audio";
+      };
+    };
   }
 
-  get type(): ContactFlowActionBlockTypes {
-    return this._type;
-  }
-
-  get parameters(): Record<string, any> {
-    return this._parameters;
-  }
-
-  get transitions(): Record<string, any> {
-    return this._transitions;
-  }
-
-  get supportedContactChannels(): ContactChannelTypes[] {
-    return this._supportedContactChannels;
-  }
-
-  get supportedContactFlowTypes(): ContactFlowType[] {
-    return this._supportedContactFlowTypes;
-  }
-
-  get parentContactFlowType(): ContactFlowType {
-    return this._parentContactFlowType;
+  /**
+   * @override
+   * @returns The transitions of the play prompt action block
+   */
+  get transitions(): {
+    NextAction: string;
+    Errors: [
+      {
+        NextAction: string;
+        ErrorType: "NoMatchingError";
+      },
+    ];
+  } {
+    return this._transitions as {
+      NextAction: string;
+      Errors: [
+        {
+          NextAction: string;
+          ErrorType: "NoMatchingError";
+        },
+      ];
+    };
   }
 }

@@ -7,6 +7,7 @@ import { ContactFlowActionBlockTypes } from "@/contact-flow/enums/action-blocks/
 import { IContactFlowMapper } from "@/contact-flow/interfaces/mapper/contact-flow-mapper";
 import { ContactFlowState } from "@/contact-flow/enums/flows/contact-flow-states";
 import { ContactFlowStatus } from "@/contact-flow/enums/flows/contact-flow-status";
+import { DisconnectParticipantActionBlock } from "@/contact-flow/entities/action-blocks/disconnect-participant";
 /**
  * Maps the raw contact flow to/from an application contact flow
  */
@@ -39,12 +40,28 @@ export class ContactFlowMapper implements IContactFlowMapper {
           id: rawActionBlock.Identifier,
           type: ContactFlowActionBlockTypes.PLAY_PROMPT,
           parameters: rawActionBlock.Parameters,
+          transitions: rawActionBlock.Transitions as {
+            NextAction: string;
+            Errors: [
+              {
+                NextAction: string;
+                ErrorType: "NoMatchingError";
+              },
+            ];
+          },
+          parentContactFlowType,
+        });
+      case ContactFlowActionBlockTypes.DISCONNECT_PARTICIPANT:
+        return new DisconnectParticipantActionBlock({
+          id: rawActionBlock.Identifier,
+          type: ContactFlowActionBlockTypes.DISCONNECT_PARTICIPANT,
+          parameters: rawActionBlock.Parameters,
           transitions: rawActionBlock.Transitions,
           parentContactFlowType,
         });
       default:
         throw new Error(
-          `Action block type ${rawActionBlock.Type} not supported`
+          `Action block type ${rawActionBlock.Type} not defined in the mapper`
         );
     }
   }
@@ -85,7 +102,7 @@ export class ContactFlowMapper implements IContactFlowMapper {
     const contactFlow = JSON.parse(rawContactFlow);
 
     const contactFlowStatus = this.getContactFlowStatus(
-      contactFlow.Metadata.status
+      contactFlow.Metadata.status.toUpperCase()
     );
 
     if (contactFlowStatus === ContactFlowStatus.SAVED) {
@@ -111,6 +128,7 @@ export class ContactFlowMapper implements IContactFlowMapper {
 
         return new InboundContactFlow({
           id,
+          startActionBlockId: contactFlow.StartAction,
           name: contactFlow.Metadata.name,
           description: contactFlow.Metadata.description,
           actionBlocks,

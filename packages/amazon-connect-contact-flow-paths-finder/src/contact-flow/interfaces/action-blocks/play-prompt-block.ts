@@ -12,4 +12,13 @@ export interface IPlayPromptBlock extends IContactFlowActionBlock {
       MediaType: "Audio"; // The type of the message to be played. The only supported type is Audio
     };
   };
+  transitions: {
+    NextAction: string; // The next action to be executed
+    Errors: [
+      {
+        NextAction: string;
+        ErrorType: "NoMatchingError";
+      },
+    ];
+  };
 }
