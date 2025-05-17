@@ -41,3 +41,13 @@ export enum ContactFlowActionBlockTypes {
   TRANSFER_TO_QUEUE = "TransferContactToQueue",
   WAIT = "Wait",
 }
+
+export enum ContactFlowNextActionBlockReason {
+  ERROR = "ERROR",
+  SUCCESS = "SUCCESS",
+  CONDITION_MET = "CONDITION_MET",
+}
+
+export enum ContactFlowNextActionBlockConditionType {
+  DTMF_KEY_PRESS = "DTMF_KEY_PRESS",
+}

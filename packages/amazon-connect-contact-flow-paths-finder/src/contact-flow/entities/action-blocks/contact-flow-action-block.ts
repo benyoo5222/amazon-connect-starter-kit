@@ -1,7 +1,12 @@
 import { ContactChannelTypes } from "@/contact-flow/enums/contact/contact-channel-types";
 import { ContactFlowType } from "@/contact-flow/enums/flows/contact-flow-types";
 import { IContactFlowActionBlock } from "@/contact-flow/interfaces/action-blocks/contact-flow-action-block";
-import { ContactFlowActionBlockTypes } from "@/contact-flow/enums/action-blocks/contact-flow-action-block-types";
+import {
+  ContactFlowActionBlockTypes,
+  ContactFlowNextActionBlockReason,
+  ContactFlowNextActionBlockConditionType,
+} from "@/contact-flow/enums/action-blocks/contact-flow-action-block-types";
+import { ContactFlowNextActionBlockInfo } from "@/contact-flow/types/action-blocks/contact-flow-next-action-info";
 
 export class ContactFlowActionBlock implements IContactFlowActionBlock {
   protected _id: string;
@@ -61,9 +66,43 @@ export class ContactFlowActionBlock implements IContactFlowActionBlock {
    * Gets the next action blocks
    * @returns The next action blocks
    */
-  getNextActionBlockIds(contactChannelType: ContactChannelTypes): string[] {
+  getNextActionBlocksInfo(
+    contactChannelType: ContactChannelTypes
+  ): ContactFlowNextActionBlockInfo[] {
     // Override in child classes
     return [];
+  }
+
+  /**
+   * Creates a next action block info
+   * @param id The next action block id
+   * @param reason The next action block reason
+   * @param error The error
+   * @param condition_met The condition met
+   * @returns The next action block info
+   */
+  createNextActionBlockInfo({
+    id,
+    reason,
+    error,
+    condition_met,
+  }: {
+    id: string;
+    reason: ContactFlowNextActionBlockReason;
+    error?: {
+      type: string;
+    };
+    condition_met?: {
+      conditionType: ContactFlowNextActionBlockConditionType;
+      conditionValue: string;
+    };
+  }): ContactFlowNextActionBlockInfo {
+    return {
+      id,
+      reason,
+      error,
+      condition_met,
+    };
   }
 
   /**************************************************

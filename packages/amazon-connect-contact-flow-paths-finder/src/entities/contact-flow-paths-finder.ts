@@ -1,8 +1,9 @@
 import { ContactChannelTypes } from "@/contact-flow/enums/contact/contact-channel-types";
 import { IContactFlow } from "@/contact-flow/interfaces/flows/contact-flow";
 import { IContactFlowPathsFinder } from "@/interface/contact-flow-paths-finder";
-import { IContactFlowPathFinderActionBlock } from "@/interface/contact-flow-path-finder-action-block";
+import { IContactFlowPathFinderActionBlock } from "@/interface/contact-flow-path-finder-block";
 import { IContactFlowActionBlock } from "@/contact-flow/interfaces/action-blocks/contact-flow-action-block";
+import { ContactFlowNextActionBlockInfo } from "@/contact-flow/types/action-blocks/contact-flow-next-action-info";
 
 export class ContactFlowPathsFinder implements IContactFlowPathsFinder {
   private _contactFlows: IContactFlow[];
@@ -125,17 +126,173 @@ export class ContactFlowPathsFinder implements IContactFlowPathsFinder {
   _createContactFlowPathFinderActionBlock(
     actionBlock: IContactFlowActionBlock,
     currentPath: IContactFlowPathFinderActionBlock[],
-    nextActionBlockId?: string
+    nextActionBlock?: ContactFlowNextActionBlockInfo
   ): IContactFlowPathFinderActionBlock {
     return {
       actionBlock,
       currentPath,
-      nextActionBlockId,
+      nextActionBlock,
     };
   }
 
   /**
-   * Handles the next action block
+   * Checks if there is a next action block
+   * @param nextActionBlockInfo The next action block information
+   * @returns True if there is a next action block, false otherwise
+   */
+  _isThereNextActionBlock(
+    nextActionBlockInfo?: ContactFlowNextActionBlockInfo
+  ): boolean {
+    if (!nextActionBlockInfo) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Handles restacking the block with next action block information
+   * @param contactFlowPathFinderActionBlock The current action block
+   * @param contactChannelType The contact channel type
+   * @returns void
+   */
+  _restackParentBlockWithNextActionBlockInformation(
+    contactFlowPathFinderActionBlock: IContactFlowPathFinderActionBlock,
+    contactChannelType: ContactChannelTypes
+  ): void {
+    // Using the current action block, find all the next action blocks
+    // using the transitions property and repush the current action block
+    // per each next action block
+    const parentContactFlowPathFinderActionBlock =
+      contactFlowPathFinderActionBlock;
+
+    // Allow the contact flow action block to determine what are the next blocks
+    const nextActionBlocksInfo =
+      parentContactFlowPathFinderActionBlock.actionBlock.getNextActionBlocksInfo(
+        contactChannelType
+      );
+
+    console.log(
+      "nextActionBlocksInfo",
+      JSON.stringify(nextActionBlocksInfo, null, 2)
+    );
+
+    if (nextActionBlocksInfo.length === 0) {
+      // Current path is complete, add it to the all paths
+      this._allPaths[contactChannelType].push(
+        contactFlowPathFinderActionBlock.currentPath
+      );
+
+      return;
+    }
+
+    const areThereInvalidNextActionBlocks = nextActionBlocksInfo.some(
+      (nextActionBlockInfo) => {
+        const blocksInContactFlows = this._findActionBlock({
+          actionBlockId: nextActionBlockInfo.id,
+        });
+
+        if (!blocksInContactFlows) {
+          return true;
+        }
+
+        return false;
+      }
+    );
+
+    if (areThereInvalidNextActionBlocks) {
+      console.log("Cannot find next action block", nextActionBlocksInfo);
+
+      throw new Error("Cannot find next action block");
+    }
+
+    // Recreate the current action block for each next action block
+    const parentContactFlowPathFinderActionBlockWithNextActionBlockIds =
+      nextActionBlocksInfo.map((nextActionBlockInfo) =>
+        this._createContactFlowPathFinderActionBlock(
+          parentContactFlowPathFinderActionBlock.actionBlock,
+          parentContactFlowPathFinderActionBlock.currentPath,
+          nextActionBlockInfo
+        )
+      );
+
+    // Re-push the current action block with the next action block ids
+    this._pathStack.push(
+      ...parentContactFlowPathFinderActionBlockWithNextActionBlockIds
+    );
+  }
+
+  /**
+   * Handles the next action block - creates the child action block and pushes it on the stack
+   * @param contactFlowPathFinderActionBlock The current action block
+   * @returns void
+   */
+  _handleNextActionBlock(
+    contactFlowPathFinderActionBlock: IContactFlowPathFinderActionBlock
+  ): void {
+    const nextActionBlock = this._findActionBlock({
+      actionBlockId: contactFlowPathFinderActionBlock.nextActionBlock!.id,
+    });
+
+    const parentContactFlowPathFinderActionBlock =
+      contactFlowPathFinderActionBlock;
+
+    // New blocks will go on the stack
+    const nextContactFlowPathFinderActionBlock =
+      this._createContactFlowPathFinderActionBlock(nextActionBlock, [
+        ...parentContactFlowPathFinderActionBlock.currentPath,
+        parentContactFlowPathFinderActionBlock,
+      ]);
+
+    this._pathStack.push(nextContactFlowPathFinderActionBlock);
+  }
+
+  /**
+   * Checks if the current action block is the last action block
+   * @param contactFlowPathFinderActionBlock The current action block
+   * @returns True if the current action block is the last action block, false otherwise
+   */
+  _isThisTheLastActionBlock(
+    contactFlowPathFinderActionBlock: IContactFlowPathFinderActionBlock
+  ): boolean {
+    return (
+      Object.keys(contactFlowPathFinderActionBlock.actionBlock.transitions)
+        .length === 0
+    );
+  }
+
+  /**
+   * Handles the last action block
+   * @param contactFlowPathFinderActionBlock The current action block
+   * @param contactChannelType The contact channel type
+   * @returns void
+   */
+  _handleLastActionBlock(
+    contactFlowPathFinderActionBlock: IContactFlowPathFinderActionBlock,
+    contactChannelType: ContactChannelTypes
+  ): void {
+    // If the first path is empty, add the current path to the all paths
+    if (
+      this._allPaths[contactChannelType].length === 1 &&
+      this._allPaths[contactChannelType][0].length === 0
+    ) {
+      this._allPaths[contactChannelType][0] = [
+        ...contactFlowPathFinderActionBlock.currentPath,
+        contactFlowPathFinderActionBlock,
+      ];
+
+      return;
+    }
+
+    // Current path is complete, add it to the all paths
+    this._allPaths[contactChannelType].push([
+      ...contactFlowPathFinderActionBlock.currentPath,
+      contactFlowPathFinderActionBlock,
+    ]);
+  }
+
+  /**
+   * Creates the paths per contact channel type
    */
   _createPathsPerContactChannelType(
     contactChannelType: ContactChannelTypes,
@@ -154,107 +311,30 @@ export class ContactFlowPathsFinder implements IContactFlowPathsFinder {
 
       // If the action block has a next action block id, find the next action block
       // And then push only the next action block on the stack
-      if (contactFlowPathFinderActionBlock.nextActionBlockId) {
-        const nextActionBlock = this._findActionBlock({
-          actionBlockId: contactFlowPathFinderActionBlock.nextActionBlockId,
-        });
-
-        const parentContactFlowPathFinderActionBlock =
-          contactFlowPathFinderActionBlock;
-
-        // New blocks will go on the stack
-        const nextContactFlowPathFinderActionBlock =
-          this._createContactFlowPathFinderActionBlock(nextActionBlock, [
-            ...parentContactFlowPathFinderActionBlock.currentPath,
-            parentContactFlowPathFinderActionBlock,
-          ]);
-
-        this._pathStack.push(nextContactFlowPathFinderActionBlock);
+      if (
+        this._isThereNextActionBlock(
+          contactFlowPathFinderActionBlock.nextActionBlock
+        )
+      ) {
+        this._handleNextActionBlock(contactFlowPathFinderActionBlock);
 
         continue;
       }
 
       // If there are no transitions, the current path is complete, add it to the all paths
       // For the current contact channel type
-      if (
-        Object.keys(contactFlowPathFinderActionBlock.actionBlock.transitions)
-          .length === 0
-      ) {
-        // If the first path is empty, add the current path to the all paths
-        if (
-          this._allPaths[contactChannelType].length === 1 &&
-          this._allPaths[contactChannelType][0].length === 0
-        ) {
-          this._allPaths[contactChannelType][0] = [
-            ...contactFlowPathFinderActionBlock.currentPath,
-            contactFlowPathFinderActionBlock,
-          ];
-          continue;
-        }
-
-        // Current path is complete, add it to the all paths
-        this._allPaths[contactChannelType].push([
-          ...contactFlowPathFinderActionBlock.currentPath,
+      if (this._isThisTheLastActionBlock(contactFlowPathFinderActionBlock)) {
+        this._handleLastActionBlock(
           contactFlowPathFinderActionBlock,
-        ]);
-        continue;
-      }
-
-      // Else, using the current action block, find all the next action blocks
-      // using the transitions property and repush the current action block
-      // per each next action block
-      const parentContactFlowPathFinderActionBlock =
-        contactFlowPathFinderActionBlock;
-
-      // Allow the contact flow action block to determine what are the next blocks
-      const nextActionBlockIds =
-        parentContactFlowPathFinderActionBlock.actionBlock.getNextActionBlockIds(
           contactChannelType
         );
 
-      if (nextActionBlockIds.length === 0) {
-        // Current path is complete, add it to the all paths
-        this._allPaths[contactChannelType].push(
-          contactFlowPathFinderActionBlock.currentPath
-        );
         continue;
       }
 
-      const nextActionBlocks = nextActionBlockIds.map((nextActionBlockId) =>
-        this._findActionBlock({
-          actionBlockId: nextActionBlockId,
-        })
-      );
-
-      const areThereInvalidNextActionBlocks = nextActionBlocks.some(
-        (nextActionBlock) => {
-          if (!nextActionBlock) {
-            return true;
-          }
-
-          return false;
-        }
-      );
-
-      if (areThereInvalidNextActionBlocks) {
-        console.log("Cannot find next action block", nextActionBlockIds);
-
-        throw new Error("Cannot find next action block");
-      }
-
-      // Recreate the current action block for each next action block
-      const parentContactFlowPathFinderActionBlockWithNextActionBlockIds =
-        nextActionBlocks.map((nextActionBlock) =>
-          this._createContactFlowPathFinderActionBlock(
-            parentContactFlowPathFinderActionBlock.actionBlock,
-            parentContactFlowPathFinderActionBlock.currentPath,
-            nextActionBlock.id
-          )
-        );
-
-      // Re-push the current action block with the next action block ids
-      this._pathStack.push(
-        ...parentContactFlowPathFinderActionBlockWithNextActionBlockIds
+      this._restackParentBlockWithNextActionBlockInformation(
+        contactFlowPathFinderActionBlock,
+        contactChannelType
       );
     }
   }

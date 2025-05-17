@@ -1,8 +1,12 @@
-import { ContactFlowActionBlockTypes } from "@/contact-flow/enums/action-blocks/contact-flow-action-block-types";
+import {
+  ContactFlowActionBlockTypes,
+  ContactFlowNextActionBlockReason,
+} from "@/contact-flow/enums/action-blocks/contact-flow-action-block-types";
 import { ContactChannelTypes } from "@/contact-flow/enums/contact/contact-channel-types";
 import { ContactFlowType } from "@/contact-flow/enums/flows/contact-flow-types";
 import { IPlayPromptBlock } from "@/contact-flow/interfaces/action-blocks/play-prompt-block";
 import { ContactFlowActionBlock } from "./contact-flow-action-block";
+import { ContactFlowNextActionBlockInfo } from "@/contact-flow/types/action-blocks/contact-flow-next-action-info";
 
 export class PlayPromptActionBlock
   extends ContactFlowActionBlock
@@ -240,36 +244,76 @@ export class PlayPromptActionBlock
 
   /**
    * Gets the next action blocks
+   * @override
+   * @param contactChannelType - The contact channel type to get the next action blocks for
    * @returns The next action blocks
    */
-  getNextActionBlockIds(contactChannelType: ContactChannelTypes): string[] {
+  getNextActionBlocksInfo(
+    contactChannelType: ContactChannelTypes
+  ): ContactFlowNextActionBlockInfo[] {
     if (contactChannelType === ContactChannelTypes.EMAIL) {
       // Always go to the success path even if its not supported
-      return [this._buildNextBlockId(this._transitions.NextAction)];
+      const nextActionBlockInfo = this.createNextActionBlockInfo({
+        id: this._buildNextBlockId(this._transitions.NextAction),
+        reason: ContactFlowNextActionBlockReason.SUCCESS,
+      });
+
+      return [nextActionBlockInfo];
     }
 
     // Next actions are determined by contact channel type, block's configuration,
     // contact flow type and transitions
-    const errorPathBlockIds = this.transitions.Errors.map(
-      (errorPath) => errorPath.NextAction
+    const errorPathBlockIdsAndTypes = this.transitions.Errors.map(
+      (errorPath) => ({
+        id: this._buildNextBlockId(errorPath.NextAction),
+        errorType: errorPath.ErrorType,
+      })
+    );
+
+    const errorBlocksPathInfo = errorPathBlockIdsAndTypes.map(
+      ({ id, errorType }) =>
+        this.createNextActionBlockInfo({
+          id,
+          reason: ContactFlowNextActionBlockReason.ERROR,
+          error: { type: errorType },
+        })
+    );
+
+    console.log(
+      "errorBlocksPathInfo",
+      JSON.stringify(errorBlocksPathInfo, null, 2)
     );
 
     // First, check if the the contact channel type is supported
     // If not, it will always go the error path
     // But if there is no error path (older blocks), it will go to the success path
+    console.log(
+      "isContactChannelTypeSupported",
+      contactChannelType,
+      this.isContactChannelTypeSupported(contactChannelType)
+    );
+
     if (!this.isContactChannelTypeSupported(contactChannelType)) {
-      if (errorPathBlockIds.length > 0) {
-        return errorPathBlockIds.map((id) => this._buildNextBlockId(id));
+      if (errorPathBlockIdsAndTypes.length > 0) {
+        return errorBlocksPathInfo;
       }
 
       // No error path, so it will go to the success path
-      return [this._buildNextBlockId(this._transitions.NextAction)];
+      const nextActionBlockInfo = this.createNextActionBlockInfo({
+        id: this._buildNextBlockId(this._transitions.NextAction),
+        reason: ContactFlowNextActionBlockReason.SUCCESS,
+      });
+
+      return [nextActionBlockInfo];
     }
 
     // The contact channel type is supported, so get all the next action blocks
     return [
-      ...errorPathBlockIds.map((id) => this._buildNextBlockId(id)),
-      this._buildNextBlockId(this._transitions.NextAction),
+      ...errorBlocksPathInfo,
+      this.createNextActionBlockInfo({
+        id: this._buildNextBlockId(this._transitions.NextAction),
+        reason: ContactFlowNextActionBlockReason.SUCCESS,
+      }),
     ];
   }
 
