@@ -11,13 +11,14 @@ export class ContactFlowActionBlock implements IContactFlowActionBlock {
   protected _supportedContactFlowTypes: ContactFlowType[];
   protected _supportedContactChannels: ContactChannelTypes[];
   protected _parentContactFlowType: ContactFlowType;
-
+  protected _parentContactFlowId: string;
   constructor({
     id,
     type,
     parameters,
     transitions,
     parentContactFlowType,
+    parentContactFlowId,
     supportedContactFlowTypes,
     supportedContactChannels,
   }: {
@@ -26,6 +27,7 @@ export class ContactFlowActionBlock implements IContactFlowActionBlock {
     parameters: Record<string, any>;
     transitions: Record<string, any>;
     parentContactFlowType: ContactFlowType;
+    parentContactFlowId: string;
     supportedContactFlowTypes: ContactFlowType[];
     supportedContactChannels: ContactChannelTypes[];
   }) {
@@ -36,6 +38,7 @@ export class ContactFlowActionBlock implements IContactFlowActionBlock {
     this._supportedContactFlowTypes = supportedContactFlowTypes;
     this._supportedContactChannels = supportedContactChannels;
     this._parentContactFlowType = parentContactFlowType;
+    this._parentContactFlowId = parentContactFlowId;
   }
 
   /**************************************************
@@ -92,5 +95,9 @@ export class ContactFlowActionBlock implements IContactFlowActionBlock {
 
   get parentContactFlowType(): ContactFlowType {
     return this._parentContactFlowType;
+  }
+
+  get parentContactFlowId(): string {
+    return this._parentContactFlowId;
   }
 }

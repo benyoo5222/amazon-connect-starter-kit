@@ -25,6 +25,7 @@ export class ContactFlowMapper implements IContactFlowMapper {
   toActionBlockNode({
     rawActionBlock,
     parentContactFlowType,
+    parentContactFlowId,
   }: {
     rawActionBlock: {
       Identifier: string;
@@ -33,11 +34,14 @@ export class ContactFlowMapper implements IContactFlowMapper {
       Transitions: Record<string, any>;
     };
     parentContactFlowType: ContactFlowType;
+    parentContactFlowId: string;
   }): IContactFlowActionBlock {
+    const blockId = `${parentContactFlowId}-${rawActionBlock.Identifier}`;
+
     switch (rawActionBlock.Type) {
       case ContactFlowActionBlockTypes.PLAY_PROMPT:
         return new PlayPromptActionBlock({
-          id: rawActionBlock.Identifier,
+          id: blockId,
           type: ContactFlowActionBlockTypes.PLAY_PROMPT,
           parameters: rawActionBlock.Parameters,
           transitions: rawActionBlock.Transitions as {
@@ -50,14 +54,16 @@ export class ContactFlowMapper implements IContactFlowMapper {
             ];
           },
           parentContactFlowType,
+          parentContactFlowId,
         });
       case ContactFlowActionBlockTypes.DISCONNECT_PARTICIPANT:
         return new DisconnectParticipantActionBlock({
-          id: rawActionBlock.Identifier,
+          id: blockId,
           type: ContactFlowActionBlockTypes.DISCONNECT_PARTICIPANT,
           parameters: rawActionBlock.Parameters,
           transitions: rawActionBlock.Transitions,
           parentContactFlowType,
+          parentContactFlowId,
         });
       default:
         throw new Error(
@@ -111,6 +117,8 @@ export class ContactFlowMapper implements IContactFlowMapper {
       );
     }
 
+    const startActionBlockId = `${id}-${contactFlow.StartAction}`;
+
     switch (contactFlow.Metadata.type) {
       case ContactFlowType.INBOUND:
         const actionBlocks = contactFlow.Actions.map(
@@ -123,12 +131,13 @@ export class ContactFlowMapper implements IContactFlowMapper {
             this.toActionBlockNode({
               rawActionBlock: block,
               parentContactFlowType: ContactFlowType.INBOUND,
+              parentContactFlowId: id,
             })
         );
 
         return new InboundContactFlow({
           id,
-          startActionBlockId: contactFlow.StartAction,
+          startActionBlockId,
           name: contactFlow.Metadata.name,
           description: contactFlow.Metadata.description,
           actionBlocks,

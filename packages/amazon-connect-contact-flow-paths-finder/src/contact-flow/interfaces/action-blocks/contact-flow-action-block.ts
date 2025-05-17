@@ -10,6 +10,7 @@ export interface IContactFlowActionBlock {
   supportedContactFlowTypes: ContactFlowType[];
   supportedContactChannels: ContactChannelTypes[];
   parentContactFlowType: ContactFlowType;
+  parentContactFlowId: string;
   isContactChannelTypeSupported(
     contactChannelType: ContactChannelTypes
   ): boolean;

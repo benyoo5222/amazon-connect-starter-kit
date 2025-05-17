@@ -14,12 +14,14 @@ export class AgentQActionBlock
     parameters,
     transitions,
     parentContactFlowType,
+    parentContactFlowId,
   }: {
     id: string;
     type: ContactFlowActionBlockTypes;
     parameters: Record<string, any>;
     transitions: Record<string, any>;
     parentContactFlowType: ContactFlowType;
+    parentContactFlowId: string;
   }) {
     super({
       id,
@@ -36,6 +38,7 @@ export class AgentQActionBlock
         ContactChannelTypes.CHAT,
         ContactChannelTypes.TASK,
       ],
+      parentContactFlowId,
     });
   }
 

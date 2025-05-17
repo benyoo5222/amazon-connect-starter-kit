@@ -117,6 +117,13 @@ export class ContactFlow implements IContactFlow {
     return status === ContactFlowStatus.PUBLISHED;
   }
 
+  /**
+   * Checks if the start action block exists in the contact flow
+   *
+   * @param actionBlocks - The action blocks to check
+   * @param startActionBlockId - The id of the start action block
+   * @returns True if the start action block exists, false otherwise
+   */
   _doesStartActionBlockExist(
     actionBlocks: IContactFlowActionBlock[],
     startActionBlockId: string

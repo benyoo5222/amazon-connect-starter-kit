@@ -14,6 +14,7 @@ export class PlayPromptActionBlock
     parameters,
     transitions,
     parentContactFlowType,
+    parentContactFlowId,
   }: {
     id: string;
     type: ContactFlowActionBlockTypes;
@@ -37,6 +38,7 @@ export class PlayPromptActionBlock
       ];
     };
     parentContactFlowType: ContactFlowType;
+    parentContactFlowId: string;
   }) {
     super({
       id,
@@ -44,6 +46,7 @@ export class PlayPromptActionBlock
       parameters,
       transitions,
       parentContactFlowType,
+      parentContactFlowId,
       supportedContactFlowTypes: [
         ContactFlowType.INBOUND,
         ContactFlowType.CUSTOMER_QUEUE,
@@ -190,6 +193,15 @@ export class PlayPromptActionBlock
     return this._parameters.Media || this._parameters.PromptId;
   }
 
+  /**
+   * Builds the next block id
+   * @param nextActionBlockId - The next action block id
+   * @returns The next block id
+   */
+  _buildNextBlockId(nextActionBlockId: string): string {
+    return `${this._parentContactFlowId}-${nextActionBlockId}`;
+  }
+
   /**************************************************
    * Public Methods
    **************************************************/
@@ -231,6 +243,11 @@ export class PlayPromptActionBlock
    * @returns The next action blocks
    */
   getNextActionBlockIds(contactChannelType: ContactChannelTypes): string[] {
+    if (contactChannelType === ContactChannelTypes.EMAIL) {
+      // Always go to the success path even if its not supported
+      return [this._buildNextBlockId(this._transitions.NextAction)];
+    }
+
     // Next actions are determined by contact channel type, block's configuration,
     // contact flow type and transitions
     const errorPathBlockIds = this.transitions.Errors.map(
@@ -242,15 +259,18 @@ export class PlayPromptActionBlock
     // But if there is no error path (older blocks), it will go to the success path
     if (!this.isContactChannelTypeSupported(contactChannelType)) {
       if (errorPathBlockIds.length > 0) {
-        return errorPathBlockIds;
+        return errorPathBlockIds.map((id) => this._buildNextBlockId(id));
       }
 
       // No error path, so it will go to the success path
-      return [this._transitions.NextAction];
+      return [this._buildNextBlockId(this._transitions.NextAction)];
     }
 
     // The contact channel type is supported, so get all the next action blocks
-    return [...errorPathBlockIds, this._transitions.NextAction];
+    return [
+      ...errorPathBlockIds.map((id) => this._buildNextBlockId(id)),
+      this._buildNextBlockId(this._transitions.NextAction),
+    ];
   }
 
   /**************************************************

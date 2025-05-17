@@ -14,12 +14,14 @@ export class DisconnectParticipantActionBlock
     parameters,
     transitions,
     parentContactFlowType,
+    parentContactFlowId,
   }: {
     id: string;
     type: ContactFlowActionBlockTypes;
     parameters: Record<string, any>;
     transitions: Record<string, any>;
     parentContactFlowType: ContactFlowType;
+    parentContactFlowId: string;
   }) {
     super({
       id,
@@ -38,6 +40,7 @@ export class DisconnectParticipantActionBlock
         ContactChannelTypes.CHAT,
         ContactChannelTypes.TASK,
       ],
+      parentContactFlowId,
     });
   }
 
